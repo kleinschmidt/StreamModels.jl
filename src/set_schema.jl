@@ -1,0 +1,142 @@
+import StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
+
+# To set schema based on a DataStreams.Data.Source:
+#
+# 1. get symbol nodes from expression
+# 2. get eltypes for each unique one
+# 3. For categorical types, get unique values (iterate over data) and add to
+#    schema.
+# 4. crawl Expr, converting symbol nodes to Continuous/CategoricalTerm objects
+#    checking for redundancy as necessary
+# 5. hold onto terms-ified expression, schema, and source
+
+get_symbols(s::Symbol) = s
+get_symbols(x) = []
+function get_symbols(ex::Expr)
+    check_call(ex)
+    unique(mapreduce(get_symbols, vcat, ex.args[2:end]))
+end
+
+
+"""
+    get_unique!(sch::Data.Schema, source, col
+
+Get the unique values of `col` from source, and store in the schema metadata
+"""
+get_unique!(sch::Data.Schema, source, col::String) = get_unique!(sch, source, sch[col])
+## TODO: optimize for case where number of rows is known
+function get_unique!(sch::Data.Schema, source, col::Integer)
+    T = Data.types(sch)[col]
+    uniq = Vector{T}()
+    seen = Set{T}()
+    row = 1
+    while !Data.isdone(source, row, col)
+        x = Data.streamfrom(source, Data.Field, T, row, col)::T
+        if !(x in seen)
+            push!(seen, x)
+            push!(uniq, x)
+        end
+        row += 1
+    end
+    uniques = get!(sch.metadata, :unique, Dict())
+    uniques[Data.header(sch)[col]] = uniq
+end
+
+
+is_categorical(s, sch::Data.Schema) = is_categorical(string(s), sch)
+is_categorical(s::String, sch::Data.Schema) = is_categorical(Data.types(sch)[sch[s]])
+is_categorical{T<:Real}(::Type{T}) = false
+is_categorical(::Type) = true
+
+
+type ContinuousTerm{T}
+    name::Symbol
+end
+
+type CategoricalTerm{T,C}
+    name::Symbol
+    contrasts::ContrastsMatrix{C,T}
+end
+
+Base.string{T}(io::IO, t::ContinuousTerm{T}) = "$(t.name)($T)"
+Base.string{T,C}(io::IO, t::CategoricalTerm{T,C}) = "$(t.name)($C{$T})"
+
+Base.show{T}(io::IO, t::ContinuousTerm{T}) = print(io, "$(t.name)($T)")
+Base.show{T,C}(io::IO, t::CategoricalTerm{T,C}) = print(io, "$(t.name)($(C){$(T)})")
+
+
+# set schema for data, checking redundancy as we go in order to promote
+# categorical contrasts where necessary.
+#
+# strategy for checking redundancy is to keep track of terms that we've already
+# seen, and checking for whether the term aliased is present
+
+is_call(ex::Expr) = Meta.isexpr(ex, :call)
+is_call(ex::Expr, op::Symbol) = Meta.isexpr(ex, :call) && ex.args[1] == op
+is_call(::Any) = false
+is_call(::Any, ::Any) = false
+
+extract_singleton(s::Set) = length(s) == 1 ? first(s) : s
+
+# in the context of an interaction term, a term aliases the version of that
+# interaction where it's been removed.  in the context of a _non_-interaction
+# expr (call to an aribtrary function), nothing is aliased
+function alias(s, context::Expr)
+    if is_call(context, :&)
+        extract_singleton(Set(c for c in context.args[2:end] if c ≠ s))
+    end
+end
+
+# in the context of itself, a single term aliases the intercept
+alias(s, t::Symbol) = s == t ? 1 : nothing
+
+_unique(col, sch::Data.Schema) = sch.metadata[:unique][string(col)]
+
+set_schema!(i::Integer, already::Set, sch::Data.Schema) = (push!(already, i); i)
+
+set_schema!(s::Symbol, already::Set, sch::Data.Schema) = set_schema!(s, s, already, sch)
+
+_eltype(s, sch::Data.Schema) = Data.types(sch)[sch[string(s)]]
+
+# convert a symbol into either a ContinuousTerm or CategoricalTerm (with the
+# appropriate contrasts, given the context this symbol appears in and the
+# lower-order terms that have already been encountered).
+function set_schema!(s::Symbol, context, already::Set, sch::Data.Schema)
+    println("$s in context of $context, already seen $already")
+    push!(already, s)
+    if is_categorical(s, sch)
+        aliased = alias(s, context)
+        println("  aliases: $aliased")
+        if aliased in already
+            # TODO: allow custom contrasts here
+            contr = DEFAULT_CONTRASTS()
+        else
+            # lower-order term that is aliased by full-rank contrasts for this
+            # term is NOT present, so use full-rank contrasts and add the
+            # aliased term to the set of terms we've seen
+            contr = FullDummyCoding()
+            push!(already, aliased)
+        end
+        CategoricalTerm(s, ContrastsMatrix(contr, _unique(s, sch)))
+    else
+        ContinuousTerm{_eltype(s, sch)}(s)
+    end
+end
+
+function set_schema!(ex::Expr, already::Set, sch::Data.Schema)
+    if is_call(ex, :&)
+        push!(already, Set(ex.args[2:end]))
+        ex.args[2:end] = map(c -> set_schema!(c, ex, already, sch), ex.args[2:end])
+    elseif is_call(ex, :|)
+        # random effect terms need to be handled differently...just skip for now
+    elseif is_call(ex, :contr)
+        # place holder for specifying contrasts within formula
+    else
+        # general case: set schema on all children
+        ex.args[2:end] = map(c -> set_schema!(c, already, sch), ex.args[2:end])
+    end
+    ex
+end
+
+set_schema!(ex::Expr, sch::Data.Schema) = set_schema!(ex, Set(), sch)
+

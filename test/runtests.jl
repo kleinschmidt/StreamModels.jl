@@ -2,4 +2,5 @@ using StreamModels
 using Base.Test
 
 
-include.(["formula.jl"])
+include.(["formula.jl"
+          "set_schema.jl"])
