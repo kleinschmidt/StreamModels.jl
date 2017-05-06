@@ -4,6 +4,8 @@ using
     StatsModels,
     DataStreams
 
+import StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
+
 export
     Formula,
     @formula,

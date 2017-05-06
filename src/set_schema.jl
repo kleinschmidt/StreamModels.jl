@@ -43,7 +43,6 @@
 # complication of special-casing calls to contr() in the Expr.
 
 
-import StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 
 # To set schema based on a DataStreams.Data.Source:
 #
