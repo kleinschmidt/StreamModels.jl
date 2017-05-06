@@ -1,3 +1,48 @@
+################################################################################
+# set_schema! when you just have an Expr:
+#
+# for each Symbol (eval term), need to check whether variable is continuous or
+# categorical, and save contrasts information for categorical variables.
+#
+# to determine contrasts, need to know what aliases what.
+#
+# first thought was that to save contrasts you'd just need to replace symbols
+# that correspond to a categorical variable with an expression like,
+# :(contr($sym,DummyCoding)).
+#
+# wait, that's fine.  because when you construct the actual ContrastsMatrix, you
+# need to pass the actual levels anyway.  then the question is where you put the
+# ContrastsMatrix...it can't just go into the anonymous function because you
+# need the contrasts to be able to interpret the results of a model...
+#
+# maybe will help to think about the whole lifecycle of a formula.
+# 1. starts as two Exprs, left and right side
+# 2. rhs gets parsed into expanded form: *, distributive + assoc properties.
+# 3. given data (schema), set contrasts for categorical variables (checking for
+#    redundancy/aliasing)
+# 4. given data, generate a model matrix
+# 5. give coefficient names for fitted model
+#
+# In the current scheme, 2 happens at Terms() (re-writing the Expr first), 3 at
+# ModelFrame(), and 4 at ModelMatrix.  Contrasts are stored on the model frame.
+#
+# In the Term{H} scheme, 2 is handled by converting to a tree of Term{}s, 3 by
+# re-writing EvalTerm nodes in that tree based on the data, and 4 either by
+# generating columns or by generating rows from tuples.
+#
+# In the raw Expr scheme, 2 is handled by re-writing the Expr, 3 by replacing
+# Symbol nodes with categorical variables with ... something? Something that's a
+# call users could use to indicate that they want contrasts.  Analogous to R's
+# C().  Could use :( contr($var, $contrasts) ).  Then eval($contrasts) to get
+# the contrasts, construct a ContrastsMatrix, and replace the Expr with the
+# actual contrasts matrix.  Then generate code based on that to get right row of
+# matrix for one element at a time.
+#
+# ALternatively, a hybrid scheme: replace Symbols with value types when combined
+# with data schema.  That allows for the best of both worlds, with the possible
+# complication of special-casing calls to contr() in the Expr.
+
+
 import StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 
 # To set schema based on a DataStreams.Data.Source:
