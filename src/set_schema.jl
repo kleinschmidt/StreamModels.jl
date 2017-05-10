@@ -182,5 +182,5 @@ function set_schema!(ex::Expr, already::Set, sch::Data.Schema)
     ex
 end
 
-set_schema!(ex::Expr, sch::Data.Schema) = set_schema!(ex, Set(), sch)
+set_schema!(x, sch::Data.Schema) = set_schema!(x, Set(), sch)
 
