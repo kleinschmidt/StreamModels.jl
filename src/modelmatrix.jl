@@ -133,11 +133,11 @@ function term_ex_factory(ex::Expr, tup::Symbol, cols)
     end
 end
 
-function anon_factory(ex::Expr, col_nums::Dict{Symbol,Int})
+function anon_factory(ex::Union{Expr,Symbol,Int}, col_nums::Dict{Symbol,Int})
     if is_call(ex, :+)
         terms = ex.args[2:end]
     else
-        terms = ex
+        terms = vcat(ex)
     end
     out_sym = gensym("Modelmat row")
     tuple_sym = gensym("Data tuple")

@@ -58,7 +58,7 @@ get_symbols(s::Symbol) = s
 get_symbols(x) = []
 function get_symbols(ex::Expr)
     check_call(ex)
-    unique(mapreduce(get_symbols, vcat, ex.args[2:end]))
+    unique(mapreduce(get_symbols, vcat, Symbol[], ex.args[2:end]))
 end
 
 
