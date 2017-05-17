@@ -44,12 +44,6 @@ Base.:(==)(f1::Formula, f2::Formula) = all(getfield(f1, f)==getfield(f2, f) for 
 
 check_call(ex) = Meta.isexpr(ex, :call) || throw(ArgumentError("non-call expression encountered: $ex"))
 
-const DEBUG = true
-
-macro debug(msg)
-    DEBUG ? :(println(string($(esc(msg))))) : nothing
-end
-
 # expression re-write rules:
 expand_star(a, b) = Expr(:call, :+, a, b, Expr(:call, :&, a, b))
 function expand_star!(ex::Expr)

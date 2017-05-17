@@ -146,11 +146,11 @@ _eltype(s, sch::Data.Schema) = Data.types(sch)[sch[string(s)]]
 # appropriate contrasts, given the context this symbol appears in and the
 # lower-order terms that have already been encountered).
 function set_schema!(s::Symbol, context, already::Set, sch::Data.Schema)
-    println("$s in context of $context, already seen $already")
+    @debug "$s in context of $context, already seen $already"
     push!(already, s)
     if is_categorical(s, sch)
         aliased = alias(s, context)
-        println("  aliases: $aliased")
+        @debug "  aliases: $aliased"
         if aliased in already
             # TODO: allow custom contrasts here
             contr = DEFAULT_CONTRASTS()
