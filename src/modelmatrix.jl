@@ -97,16 +97,36 @@ for the model matrix.  The second return value is the number of columns created 
 expression.
 """
 
-term_ex_factory(t::ContinuousTerm, tup::Symbol, cols) = 
-    :($tup[$(cols[t.name])]), 1
 
-function term_ex_factory(t::CategoricalTerm, tup::Symbol, cols)
+# two step process: at bottom level, generate code to access a particular term
+# value from a tuple.  at top level, handle special formula syntax cases like
+# interaction terms and intercepts (integers)
+
+tupleify(x, tup, cols) = x, 1
+
+tupleify(t::ContinuousTerm, tup::Symbol, cols) = :($tup[$(cols[t.name])]), 1
+
+function tupleify(t::CategoricalTerm, tup::Symbol, cols)
     p = CategoricalArrays.CategoricalPool(t.contrasts.levels)
     m = t.contrasts.matrix
     ncols = size(t.contrasts.matrix, 2)
     :($m[get($p, $tup[$(cols[t.name])]), :]), ncols
 end
 
+function tupleify(ex::Expr, tup::Symbol, cols)
+    is_call(ex) || error("Non-call expression term encountered: $ex")
+    children, n_cols = zip([tupleify(c, tup, cols) for c in ex.args[2:end]]...)
+    Expr(:call, ex.args[1], children...), 1
+end
+
+
+
+
+# default: call tupleify
+term_ex_factory(x, tup::Symbol, cols) = tupleify(x, tup, cols)
+
+# special cases at top level:
+# integers are parsed as intercept/lack thereof
 function term_ex_factory(i::Integer, tup::Symbol, cols)
     if i == 1
         1, 1
@@ -119,17 +139,14 @@ end
 
 function term_ex_factory(ex::Expr, tup::Symbol, cols)
     if is_call(ex, :&)
-        children, n_cols = zip([term_ex_factory(c, tup, cols) for c in ex.args[2:end]]...)
+        children, n_cols = zip([tupleify(c, tup, cols) for c in ex.args[2:end]]...)
         :(kron($(children...))), prod(n_cols)
     elseif is_call(ex, :|)
         # skip ranef terms
     elseif is_call(ex, :+)
-        throw(ArgumentError("Call to + encountered. Did you parse! this expression first? $ex"))
+        throw(ArgumentError("Call to + encountered. Did you parse!() this expression first? $ex"))
     else
-        # TODO: handle general functions.  the difficulty here is you need to handle
-        # integers differently.  could probably handle this by separating out the tuple
-        # accessing stuff and the term ex functions.
-        throw(ArgumentError("Unrecognized term: $ex"))
+        tupleify(ex, tup, cols)
     end
 end
 
