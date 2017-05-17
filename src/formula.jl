@@ -3,6 +3,8 @@ type Formula
     rhs::Union{Symbol, Expr, Integer}
 end
 
+Base.copy(f::Formula) = Formula(copy(f.lhs), copy(f.rhs))
+
 macro formula(ex)
     raise_tilde!(ex)
     if (ex.head === :macrocall && ex.args[1] === Symbol("@~")) || (ex.head === :call && ex.args[1] === :(~))
@@ -126,6 +128,14 @@ function parse!(ex::Expr)
     ex
 end
 
+parse!(x) = x
+function parse!(f::Formula)
+    f.rhs |> parse! |> sort_terms!
+    f.lhs |> parse!
+    f
+end
+
+parse(f::Formula) = parse!(copy(f))
 
 function sort_terms!(ex::Expr)
     check_call(ex)

@@ -157,7 +157,7 @@ end
 
 
 function modelmatrix(source, f::Formula)
-    parse!(f.rhs)
+    parse!(f)
     symbols = vcat(get_symbols(f.lhs), get_symbols(f.rhs))
     sch = Data.schema(source)
     # store the unique values for categorical variables in the schema
