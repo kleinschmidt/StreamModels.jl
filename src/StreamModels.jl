@@ -2,17 +2,20 @@ module StreamModels
 
 using
     StatsModels,
-    DataStreams
+    DataStreams,
+    CategoricalArrays
 
 import StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 
 export
     Formula,
     @formula,
-    parse!
+    parse!,
+    modelmatrix
 
 # package code goes here
 include.(["formula.jl",
-          "set_schema.jl"])
+          "set_schema.jl",
+          "modelmatrix.jl"])
 
 end # module
