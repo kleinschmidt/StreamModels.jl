@@ -1,6 +1,7 @@
 using StreamModels
 using Base.Test
 
-
-include.(["formula.jl",
-          "modelmatrix.jl"])
+@testset "StreamModels tests" begin
+    include.(["formula.jl",
+              "modelmatrix.jl"])
+end
