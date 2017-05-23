@@ -6,6 +6,7 @@ using DataFrames
 
     StreamModels.reset!(x::CSV.Source) = CSV.reset!(x)
     f = @formula(~ 1+a+b)
+    f2 = @formula(~ c)
 
     @testset "No nulls" begin
         source = CSV.Source(joinpath(Pkg.dir("StreamModels"), "test", "test.csv"))

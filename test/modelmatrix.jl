@@ -12,7 +12,17 @@
                        b = rand(10),
                        c = repeat(["a", "b"], inner=5))
 
-    @testset "star expansion" begin 
+    @testset "single term RHS" begin
+
+        @test all(modelmatrix(source, @formula(~ 1)) .== 1)
+        @test all(modelmatrix(source, @formula(~ a)) .== float(source[:a]))
+        @test all(modelmatrix(source, @formula(~ b)) .== source[:b])
+        @test all(modelmatrix(source, @formula(~ c)) .== [ones(5)  zeros(5)
+                                                          zeros(5) ones(5)])
+
+    end
+
+    @testset "star expansion" begin
         f = @formula( ~ a*b*c)
 
         mm = modelmatrix(source, f)
@@ -39,4 +49,3 @@
     end
 
 end
-

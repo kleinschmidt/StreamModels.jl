@@ -126,6 +126,7 @@ end
 
 parse(f::Formula) = parse!(copy(f))
 Base.copy(x::Void) = x
+Base.copy(x::Symbol) = x
 
 function sort_terms!(ex::Expr)
     check_call(ex)

@@ -151,3 +151,9 @@ end
 
 set_schema!(x, sch::Data.Schema) = set_schema!(x, Set(), sch)
 
+set_schema!(::Void, ::Set, ::Data.Schema) = nothing
+
+function set_schema!(f::Formula, sch::Data.Schema)
+    f.rhs = set_schema!(f.rhs, sch)
+    f.lhs = set_schema!(f.lhs, sch)
+end

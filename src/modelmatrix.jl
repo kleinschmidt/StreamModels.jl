@@ -101,7 +101,7 @@ function term_ex_factory(ex::Expr, tup::Symbol, cols)
     end
 end
 
-function anon_factory(ex::Union{Expr,Symbol,Int}, col_nums::Dict{Symbol,Int})
+function anon_factory(ex::Union{Expr,Term,Int}, col_nums::Dict{Symbol,Int})
     if is_call(ex, :+)
         terms = ex.args[2:end]
     else
@@ -132,9 +132,9 @@ function modelmatrix(source, f::Formula)
     categorical_cols = [s for s in symbols if is_categorical(s, sch)]
     get_unique!(sch, source, categorical_cols)
 
-    set_schema!(f.rhs, sch)
+    set_schema!(f, sch)
     
-    col_nums = Dict(s=>sch[string(s)] for s in symbols)
+    col_nums = Dict{Symbol,Int}(s=>sch[string(s)] for s in symbols)
     fill_row_expr, mm_cols = anon_factory(f.rhs, col_nums)
     fill_row! = eval(fill_row_expr)
 

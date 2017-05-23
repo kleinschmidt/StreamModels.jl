@@ -14,8 +14,10 @@ type CategoricalTerm{T,C}
     contrasts::ContrastsMatrix{C,T}
 end
 
+typealias Term Union{ContinuousTerm,CategoricalTerm}
+
 type Formula
-    lhs::Union{Symbol, Expr, Void}
-    rhs::Union{Symbol, Expr, Integer}
+    lhs::Union{Symbol, Expr, Term, Void}
+    rhs::Union{Symbol, Expr, Term, Integer}
 end
 
