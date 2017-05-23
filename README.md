@@ -57,6 +57,26 @@ julia> mm = modelmatrix(source, f)
 Note that there's no intercept by default, and hence the contrasts for the first
 `c` term are properly promoted to "full rank" dummy coding.
 
+### Arbitrary functions
+
+Using code generation means we can (again) use arbitrary julia code in the
+formula:
+
+```julia
+julia> modelmatrix(source, @formula(~1 + a + log(a) + log(a+b)))
+10×4 Array{Float64,2}:
+ 1.0   1.0  0.0       0.482802
+ 1.0   2.0  0.693147  0.884687
+ 1.0   3.0  1.09861   1.26395 
+ 1.0   4.0  1.38629   1.49256 
+ 1.0   5.0  1.60944   1.6398  
+ 1.0   6.0  1.79176   1.81235 
+ 1.0   7.0  1.94591   2.01432 
+ 1.0   8.0  2.07944   2.11786 
+ 1.0   9.0  2.19722   2.21899 
+ 1.0  10.0  2.30259   2.3639  
+```
+
 ### CSV source
 
 For any source that's not random access, need to add a `reset!` method (until
