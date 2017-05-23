@@ -17,66 +17,6 @@
 # 2. function that takes one tuple and returns one model matrix row
 
 
-"""
-    StreamColIterator(source::Data.Source, schema::Data.Schema, col::Int)
-
-An iterator that wraps a single column of a streaming data source.  We can zip these
-together to create a tuple iterator.
-"""
-
-type StreamColIterator{T,R}
-    source::Any
-    schema::Data.Schema{R}
-    col::Int
-end
-
-Base.start(::StreamColIterator) = 1
-Base.done(iter::StreamColIterator, state::Int) = Data.isdone(iter.source, state, iter.col)
-Base.next{T}(iter::StreamColIterator{T}, state::Int) = 
-    Data.streamfrom(iter.source, Data.Field, T, state, iter.col), state+1
-
-StreamColIterator{R}(source, schema::Data.Schema{R}, col::Int) =
-    StreamColIterator{schema.types[col], R}(source, schema, col)
-
-Base.length{T}(iter::StreamColIterator{T,true}) = size(iter.schema, 1)
-Base.eltype{T,R}(::Type{StreamColIterator{T,R}}) = T
-
-
-
-
-
-
-
-
-
-"""
-    StreamTupleIterator(source::Data.Source, schema::Data.Schema, cols::Vector{Int})
-
-An iterator for tuples from a streaming Data.Source
-"""
-type StreamTupleIterator{R}
-    source::Any
-    schema::Data.Schema{R}
-    cols::Vector{Int}
-end
-
-Base.start(::StreamTupleIterator) = 1
-Base.done(iter::StreamTupleIterator, state::Int) = Data.isdone(iter.source, state, 1)
-function Base.next(iter::StreamTupleIterator, state::Int)
-    t = ntuple(length(iter.cols)) do i
-        Data.streamfrom(iter.source, Data.Field, sch.types[iter.cols[i]], state,
-                        iter.cols[i]) 
-    end
-    t, state+1
-end
-
-Base.length(iter::StreamTupleIterator{true}) = size(iter.schema, 1)
-## TODO: eltype (need to modify type to store eltypes as type parameter)
-
-
-
-
-
 ############################################################################################
 # To generate row function: need to know
 #
@@ -106,12 +46,23 @@ tupleify(x, tup, cols) = x, 1
 
 tupleify(t::ContinuousTerm, tup::Symbol, cols) = :($tup[$(cols[t.name])]), 1
 
+tupleify{T}(t::ContinuousTerm{Nullable{T}}, tup::Symbol, cols) = 
+    :(get($tup[$(cols[t.name])])), 1
+
 function tupleify(t::CategoricalTerm, tup::Symbol, cols)
     p = CategoricalArrays.CategoricalPool(t.contrasts.levels)
     m = t.contrasts.matrix
     ncols = size(t.contrasts.matrix, 2)
     :($m[get($p, $tup[$(cols[t.name])]), :]), ncols
 end
+
+function tupleify{T}(t::CategoricalTerm{Nullable{T}}, tup::Symbol, cols)
+    p = CategoricalArrays.CategoricalPool(t.contrasts.levels)
+    m = t.contrasts.matrix
+    ncols = size(t.contrasts.matrix, 2)
+    :($m[get($p, get($tup[$(cols[t.name])])), :]), ncols
+end
+
 
 function tupleify(ex::Expr, tup::Symbol, cols)
     is_call(ex) || error("Non-call expression term encountered: $ex")
@@ -174,23 +125,21 @@ end
 
 
 function modelmatrix(source, f::Formula)
-    parse!(f)
+    f = parse(f)
     symbols = vcat(get_symbols(f.lhs), get_symbols(f.rhs))
     sch = Data.schema(source)
     # store the unique values for categorical variables in the schema
-    for s in symbols
-        if is_categorical(s, sch)
-            get_unique!(sch, source, string(s))
-        end
-    end
+    categorical_cols = [s for s in symbols if is_categorical(s, sch)]
+    get_unique!(sch, source, categorical_cols)
+
     set_schema!(f.rhs, sch)
     
-    col_nums = Dict(s=>i for (i,s) in enumerate(symbols))
+    col_nums = Dict(s=>sch[string(s)] for s in symbols)
     fill_row_expr, mm_cols = anon_factory(f.rhs, col_nums)
     fill_row! = eval(fill_row_expr)
 
-    source_col_nums = [sch[string(s)] for s in symbols]
-    tuple_iter = zip([StreamColIterator(source, sch, i) for i in source_col_nums]...)
+    tuple_iter = tuple_iterator(source)
+    reset!(tuple_iter)
 
     model_mat = zeros(length(tuple_iter), mm_cols)
     for (i, t) in enumerate(tuple_iter)

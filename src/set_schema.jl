@@ -62,45 +62,12 @@ function get_symbols(ex::Expr)
 end
 
 
-"""
-    get_unique!(sch::Data.Schema, source, col
-
-Get the unique values of `col` from source, and store in the schema metadata
-"""
-get_unique!(sch::Data.Schema, source, col::String) = get_unique!(sch, source, sch[col])
-## TODO: optimize for case where number of rows is known
-function get_unique!(sch::Data.Schema, source, col::Integer)
-    T = Data.types(sch)[col]
-    uniq = Vector{T}()
-    seen = Set{T}()
-    row = 1
-    while !Data.isdone(source, row, col)
-        x = Data.streamfrom(source, Data.Field, T, row, col)::T
-        if !(x in seen)
-            push!(seen, x)
-            push!(uniq, x)
-        end
-        row += 1
-    end
-    uniques = get!(sch.metadata, :unique, Dict())
-    uniques[Data.header(sch)[col]] = uniq
-end
-
-
 is_categorical(s, sch::Data.Schema) = is_categorical(string(s), sch)
 is_categorical(s::String, sch::Data.Schema) = is_categorical(Data.types(sch)[sch[s]])
 is_categorical{T<:Real}(::Type{T}) = false
+is_categorical{T<:Real}(::Type{Nullable{T}}) = false
 is_categorical(::Type) = true
 
-
-type ContinuousTerm{T}
-    name::Symbol
-end
-
-type CategoricalTerm{T,C}
-    name::Symbol
-    contrasts::ContrastsMatrix{C,T}
-end
 
 Base.string{T}(io::IO, t::ContinuousTerm{T}) = "$(t.name)($T)"
 Base.string{T,C}(io::IO, t::CategoricalTerm{T,C}) = "$(t.name)($C{$T})"

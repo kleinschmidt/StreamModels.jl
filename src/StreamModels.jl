@@ -11,6 +11,7 @@ export
     Formula,
     @formula,
     parse!,
+    reset!,
     modelmatrix
 
 # package code goes here
@@ -21,7 +22,10 @@ macro debug(msg)
     DEBUG ? :(println(string($(esc(msg))))) : nothing
 end
 
-include.(["formula.jl",
+include.(["typedefs.jl",
+          "formula.jl",
+          "tupleiterators.jl",
+          "stream_utils.jl",
           "set_schema.jl",
           "modelmatrix.jl"])
 

@@ -1,8 +1,3 @@
-type Formula
-    lhs::Union{Symbol, Expr, Void}
-    rhs::Union{Symbol, Expr, Integer}
-end
-
 Base.copy(f::Formula) = Formula(copy(f.lhs), copy(f.rhs))
 
 macro formula(ex)
@@ -130,6 +125,7 @@ function parse!(f::Formula)
 end
 
 parse(f::Formula) = parse!(copy(f))
+Base.copy(x::Void) = x
 
 function sort_terms!(ex::Expr)
     check_call(ex)
@@ -144,7 +140,7 @@ end
 sort_terms!(x) = x
 
 degree(i::Integer) = 0
-degree(s::Symbol) = 1
+degree(s::Union{Symbol, ContinuousTerm, CategoricalTerm}) = 1
 function degree(ex::Expr)
     check_call(ex)
     if ex.args[1] == :&
