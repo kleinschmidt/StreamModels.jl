@@ -171,11 +171,14 @@ The general strategy is
     ```
 
     This generates a function with two arguments: a row vector to fill, and a
-    tuple for the corresponding table row.  The contrast matrices for
-    categorical terms are spliced into the function, as are the categorical
-    pools used to index into those matrices (that part is probably very
-    inefficient).  Note that this also returns the number of columns that the
-    model matrix will have.
+    tuple for the corresponding table row.  Main effects of continuous variables
+    are just copied over to the output vector.  Interactions are generated via
+    kronecker product of the main effects (reducing to multiplication for
+    continuous terms).  Categorical values are converted to the correct row of a
+    contrasts matrix and copied to the output.  The contrast matrices are
+    spliced into the function, as are the categorical pools used to index into
+    those matrices (that part is probably very inefficient).  Note that this
+    also returns the number of columns that the model matrix will have.
 
 Using code generation allows for arbitrary functions and, in principle, to
 customize based on the back end, without making strong assumptions about the
