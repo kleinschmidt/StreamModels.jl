@@ -56,12 +56,12 @@ function tupleify(t::CategoricalTerm, tup::Symbol, cols)
     :($m[get($p, $tup[$(cols[t.name])]), :]), ncols
 end
 
-function tupleify{T}(t::CategoricalTerm{Nullable{T}}, tup::Symbol, cols)
-    p = CategoricalArrays.CategoricalPool(t.contrasts.levels)
-    m = t.contrasts.matrix
-    ncols = size(t.contrasts.matrix, 2)
-    :($m[get($p, get($tup[$(cols[t.name])])), :]), ncols
-end
+# function tupleify{T}(t::CategoricalTerm{Nullable{T}}, tup::Symbol, cols)
+#     p = CategoricalArrays.CategoricalPool(t.contrasts.levels)
+#     m = t.contrasts.matrix
+#     ncols = size(t.contrasts.matrix, 2)
+#     :($m[get($p, get($tup[$(cols[t.name])])), :]), ncols
+# end
 
 
 function tupleify(ex::Expr, tup::Symbol, cols)

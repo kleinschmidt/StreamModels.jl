@@ -5,7 +5,7 @@ using DataFrames
 @testset "CSV source" begin
 
     StreamModels.reset!(x::CSV.Source) = CSV.reset!(x)
-    f = @formula(~ 1+a+b)
+    f = @formula(~ 1+a+b+c)
     f2 = @formula(~ c)
 
     @testset "No nulls" begin
