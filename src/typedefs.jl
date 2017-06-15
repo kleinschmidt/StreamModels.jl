@@ -4,17 +4,16 @@
 # you get a transformed expression that you can use to generate a model matrix
 # when combined with a data source.
 
+abstract Term
 
-type ContinuousTerm{T}
+type ContinuousTerm{T} <: Term
     name::Symbol
 end
 
-type CategoricalTerm{T,C}
+type CategoricalTerm{T,C} <: Term
     name::Symbol
     contrasts::ContrastsMatrix{C,T}
 end
-
-typealias Term Union{ContinuousTerm,CategoricalTerm}
 
 type Formula
     lhs::Union{Symbol, Expr, Term, Void}

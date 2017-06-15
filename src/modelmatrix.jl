@@ -20,7 +20,7 @@ function modelmatrix(source, f::Formula)
     tuple_iter = tuple_iterator(source)
     
     f = parse(f)
-    symbols = vcat(get_symbols(f.lhs), get_symbols(f.rhs))
+    symbols = get_symbols(f)
     sch = Data.schema(tuple_iter)
     # store the unique values for categorical variables in the schema
     categorical_cols = [s for s in symbols if is_categorical(s, sch)]

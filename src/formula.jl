@@ -12,6 +12,10 @@ macro formula(ex)
     return Expr(:call, :Formula, lhs, rhs)
 end
 
+Base.show(io::IO, f::Formula) = join(io,
+                                     [f.lhs === nothing ? "" : f.lhs, f.rhs],
+                                     " ~ ")
+
 """
     raise_tilde!(ex::Expr)
 

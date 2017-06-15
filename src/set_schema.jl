@@ -55,12 +55,13 @@
 # 5. hold onto terms-ified expression, schema, and source
 
 get_symbols(s::Symbol) = s
+get_symbols(t::Term) = t.name
 get_symbols(x) = []
 function get_symbols(ex::Expr)
     check_call(ex)
     unique(mapreduce(get_symbols, vcat, Symbol[], ex.args[2:end]))
 end
-
+get_symbols(f::Formula) = vcat(get_symbols.([f.lhs, f.rhs])...)
 
 is_categorical(s, sch::Data.Schema) = is_categorical(string(s), sch)
 is_categorical(s::String, sch::Data.Schema) = is_categorical(Data.types(sch)[sch[s]])
@@ -72,8 +73,8 @@ is_categorical(::Type) = true
 Base.string{T}(io::IO, t::ContinuousTerm{T}) = "$(t.name)($T)"
 Base.string{T,C}(io::IO, t::CategoricalTerm{T,C}) = "$(t.name)($C{$T})"
 
-Base.show{T}(io::IO, t::ContinuousTerm{T}) = print(io, "$(t.name)($T)")
-Base.show{T,C}(io::IO, t::CategoricalTerm{T,C}) = print(io, "$(t.name)($(C){$(T)})")
+Base.show{T}(io::IO, t::ContinuousTerm{T}) = print(io, "$(t.name)::$T")
+Base.show{T,C}(io::IO, t::CategoricalTerm{T,C}) = print(io, "$(t.name)::$C{$T}")
 
 
 # set schema for data, checking redundancy as we go in order to promote
@@ -105,7 +106,7 @@ set_schema!(i::Integer, already::Set, sch::Data.Schema) = (push!(already, i); i)
 
 set_schema!(s::Symbol, already::Set, sch::Data.Schema) = set_schema!(s, s, already, sch)
 
-_eltype(s, sch::Data.Schema) = Data.types(sch)[sch[string(s)]]
+_eltype(s, sch::Data.Schema) = _get(Data.types(sch)[sch[string(s)]])
 _unique(col, sch::Data.Schema) = sch.metadata[:unique][string(col)]
 
 # convert a symbol into either a ContinuousTerm or CategoricalTerm (with the
@@ -155,4 +156,5 @@ set_schema!(::Void, ::Set, ::Data.Schema) = nothing
 function set_schema!(f::Formula, sch::Data.Schema)
     f.rhs = set_schema!(f.rhs, sch)
     f.lhs = set_schema!(f.lhs, sch)
+    f
 end
