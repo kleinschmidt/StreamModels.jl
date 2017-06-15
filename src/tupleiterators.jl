@@ -1,4 +1,25 @@
-abstract TupleIterator
+"""
+    TupleIterator{R,Ts,N}
+
+An abstract type that represents an iterator of tuples from a Data.Source.
+The type parameters correspond to:
+
+* `R` Whether the number of rows is known from the schema
+* `Ts` The element type of the iterator (`Tuple{T1, T2, ... Tn}`)
+* `N` The number of fields (length of each tuple yielded by the iterator)
+
+Currently, these assume that there are **no missing values**.  This is a bad,
+dirty hack because I don't feel like dealing with the complication of unwrapping
+`Nullable`s at the moment.  What this means is that every element will have
+`get` called on it, and the types in `Ts` are the unwrapped types.  If the
+underlying schema says that a column has type `Nullable{Int64}`, then the
+parameters in `Ts` will be `Int64`
+
+"""
+abstract TupleIterator{R,Ts,N}
+
+Data.schema(ti::TupleIterator) = ti.schema
+Data.types{R,Ts}(ti::TupleIterator{R,Ts}) = collect(Ts.parameters)
 
 """
     FieldTupleIterator
@@ -6,7 +27,7 @@ abstract TupleIterator
 An iterator that wraps a Data.Source supporting Data.Field streaming, and
 generates a sequence of tuples of rows.
 """
-type FieldTupleIterator{R,Ts,N} <: TupleIterator
+type FieldTupleIterator{R,Ts,N} <: TupleIterator{R,Ts,N}
     source
     schema::Data.Schema{R}
     state::Int
@@ -14,7 +35,7 @@ end
 
 function FieldTupleIterator{R}(source, schema::Data.Schema{R})
     N = size(schema,2)
-    Ts = Tuple{schema.types...}
+    Ts = Tuple{map(_get, schema.types)...}
     FieldTupleIterator{R, Ts, N}(source, schema, 1)
 end
 
@@ -22,10 +43,10 @@ Base.start(::FieldTupleIterator) = 1
 Base.done(iter::FieldTupleIterator, state::Int) = Data.isdone(iter.source, state, 1)
 function Base.next{R,Ts,N}(iter::FieldTupleIterator{R,Ts,N}, state::Int)
     t = ntuple(N) do i
-        Data.streamfrom(iter.source,
-                        Data.Field,
-                        iter.schema.types[i],
-                        state, i)
+        _get(Data.streamfrom(iter.source,
+                             Data.Field,
+                             iter.schema.types[i],
+                             state, i))
     end
     t, state+1
 end
@@ -45,7 +66,7 @@ everything in memory at once then use a `FieldTupleIterator`
 
 """
 
-type ColumnTupleIterator{R,Ts,N} <: TupleIterator
+type ColumnTupleIterator{R,Ts,N} <: TupleIterator{R,Ts,N}
     source::Any
     schema::Data.Schema{R}
     iter::Any
@@ -56,13 +77,18 @@ function ColumnTupleIterator{R}(source, schema::Data.Schema{R})
     N = size(schema,2)
     cols = (Data.streamfrom(source, Data.Column, schema.types[i], i) for i in 1:N)
     iter = zip(cols...)
-    Ts = eltype(iter)
+    Ts = Tuple{map(_get, schema.types)...}
     ColumnTupleIterator{R, Ts, N}(source, schema, iter, 1)
 end
 
 Base.start(iter::ColumnTupleIterator) = 1
 Base.done(iter::ColumnTupleIterator, state) = done(iter.iter, state)
-Base.next(iter::ColumnTupleIterator, state) = next(iter.iter, state)
+function Base.next(iter::ColumnTupleIterator, state)
+    x, state = next(iter.iter, state)
+    t = ntuple(N) do i
+        _get(x[i])
+    end
+end
 Base.length(iter::ColumnTupleIterator{true}) = length(iter.iter)
 Base.eltype{R,Ts,N}(::Type{ColumnTupleIterator{R,Ts,N}}) = Ts
 
