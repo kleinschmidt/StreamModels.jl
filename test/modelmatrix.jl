@@ -6,7 +6,7 @@
     using StreamModels
     using DataStreams
 
-    import StreamModels: @formula
+    using StreamModels: @formula
 
     source = DataFrame(a = collect(1:10),
                        b = rand(10),
