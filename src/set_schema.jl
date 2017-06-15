@@ -101,13 +101,12 @@ end
 # in the context of itself, a single term aliases the intercept
 alias(s, t::Symbol) = s == t ? 1 : nothing
 
-_unique(col, sch::Data.Schema) = sch.metadata[:unique][string(col)]
-
 set_schema!(i::Integer, already::Set, sch::Data.Schema) = (push!(already, i); i)
 
 set_schema!(s::Symbol, already::Set, sch::Data.Schema) = set_schema!(s, s, already, sch)
 
 _eltype(s, sch::Data.Schema) = Data.types(sch)[sch[string(s)]]
+_unique(col, sch::Data.Schema) = sch.metadata[:unique][string(col)]
 
 # convert a symbol into either a ContinuousTerm or CategoricalTerm (with the
 # appropriate contrasts, given the context this symbol appears in and the
