@@ -4,7 +4,7 @@
 # you get a transformed expression that you can use to generate a model matrix
 # when combined with a data source.
 
-abstract Term
+@compat abstract type Term end
 
 type ContinuousTerm{T} <: Term
     name::Symbol

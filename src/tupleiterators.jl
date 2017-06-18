@@ -16,7 +16,7 @@ underlying schema says that a column has type `Nullable{Int64}`, then the
 parameters in `Ts` will be `Int64`
 
 """
-abstract TupleIterator{R,Ts,N}
+@compat abstract type TupleIterator{R,Ts,N} end
 
 Data.schema(ti::TupleIterator) = ti.schema
 Data.types{R,Ts}(ti::TupleIterator{R,Ts}) = collect(Ts.parameters)
