@@ -35,7 +35,7 @@ function modelmatrix(source, f::Formula)
     reset!(tuple_iter)
     model_mat = zeros(length(tuple_iter), af.num_cols)
     for (i, t) in enumerate(tuple_iter)
-        fill_row!(view(model_mat, i, :), t)
+        Compat.invokelatest(fill_row!, view(model_mat, i, :), t)
     end
 
     model_mat

@@ -4,7 +4,8 @@ using
     StatsModels,
     DataStreams,
     CategoricalArrays,
-    ArgCheck
+    ArgCheck,
+    Compat
 
 using StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 using CategoricalArrays: CategoricalPool
