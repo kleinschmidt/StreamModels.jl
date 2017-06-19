@@ -12,6 +12,7 @@ underlying schema.  `iter` is reset before and after this operation.
 
 """
 function get_unique!{T<:Integer}(iter::TupleIterator, cols::Vector{T})
+    isempty(cols) && return(iter)
     reset!(iter)
     types = Data.types(iter)
     uniqs = [Vector{types[i]}() for i in cols]
