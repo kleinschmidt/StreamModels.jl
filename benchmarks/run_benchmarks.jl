@@ -5,11 +5,14 @@ using DataFrames
 
 using StreamModels: @formula
 
-source = DataFrame(a = collect(1:10),
-                   b = rand(10),
-                   c = repeat(["a", "b"], inner=5))
+n = 100_000
+source = DataFrame(a = collect(1:n),
+                   b = rand(n),
+                   c = repeat(["a", "b"], inner=n>>1))
 
-f = @formula( ~ a+b+c)
+
+
+f = @formula( ~ a)
 
 @benchmark StreamModels.parse!($f)
 
@@ -19,5 +22,10 @@ b = @benchmarkable modelmatrix(source, f)
 # BenchmarkTools.save("params.jld", "b", params(b))
 
 loadparams!(b, BenchmarkTools.load("params.jld", "b"))
+source2 = copy(source)
+pool!(source2, :c)
+ff = DataFrames.Formula(f.lhs, f.rhs)
+
+b2 = @benchmark ModelMatrix(ModelFrame($ff, $source2))
 
 run(b)
