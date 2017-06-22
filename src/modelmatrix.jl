@@ -1,3 +1,21 @@
+################################################################################
+# This strategy is **BORKED**.  Really should be a macro, because we can't
+# execute methods that we just generated (#17057).  Also conceptually: when you
+# generate code, that should be a macro, right?
+#
+# The interface can be very similar.  Just that instead of calling a modelmatrix
+# function at the highest level, we call a `@modelmatrix` macro instead.
+#
+# Actually **that's** borked too. You can't just use a macro because you need to
+# know more than the formula tells you (namely, the types/number of levels for
+# each column). But I think you can do things as a two-stage process: a macro to
+# parse the formula and create the anonymous functions you need for internal
+# stuff (like log(a)), and a generated function to generate the code to fill in
+# the mm.
+
+
+
+
 # once schema is set in formula, we can generate code to fill in the model
 # matrix row-by-row.  how we do this depends on the streaming type of the
 # source.  if we can get whole columns at a time, then we can efficiently
