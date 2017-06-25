@@ -1,3 +1,11 @@
+type Formula
+    lhs::Union{Symbol, Expr, Void}
+    rhs::Union{Symbol, Expr, Integer}
+    rhs_lowered::Expr
+    terms::Vector{Terms.Term}
+end
+
+
 Base.copy(f::Formula) = Formula(copy(f.lhs), copy(f.rhs))
 
 macro formula(ex)
@@ -5,11 +13,13 @@ macro formula(ex)
     if (ex.head === :macrocall && ex.args[1] === Symbol("@~")) || (ex.head === :call && ex.args[1] === :(~))
         2 <= length(ex.args) <= 3 || error("malformed formula: $ex")
         lhs = length(ex.args) == 3 ? Base.Meta.quot(ex.args[2]) : nothing
-        rhs = Base.Meta.quot(ex.args[end])
+        rhs = ex.args[end]
     else
         error("expected formula separator ~, got $(ex.head)")
     end
-    return Expr(:call, :Formula, lhs, rhs)
+    rhs_lowered = sort_terms!(parse!(copy(rhs)))
+    terms_ex = Terms.ex_from_formula(rhs_lowered)
+    return Expr(:call, :Formula, lhs, Meta.quot(rhs), Meta.quot(rhs_lowered), terms_ex)
 end
 
 Base.show(io::IO, f::Formula) = join(io,
@@ -122,15 +132,15 @@ function parse!(ex::Expr)
 end
 
 parse!(x) = x
-function parse!(f::Formula)
-    f.rhs |> parse! |> sort_terms!
-    f.lhs |> parse!
-    f
-end
+# function parse!(f::Formula)
+#     f.rhs |> parse! |> sort_terms!
+#     f.lhs |> parse!
+#     f
+# end
 
-parse(f::Formula) = parse!(copy(f))
-Base.copy(x::Void) = x
-Base.copy(x::Symbol) = x
+# parse(f::Formula) = parse!(copy(f))
+# Base.copy(x::Void) = x
+# Base.copy(x::Symbol) = x
 
 function sort_terms!(ex::Expr)
     check_call(ex)
@@ -145,7 +155,8 @@ end
 sort_terms!(x) = x
 
 degree(i::Integer) = 0
-degree(s::Union{Symbol, ContinuousTerm, CategoricalTerm}) = 1
+degree(::Symbol) = 1
+# degree(s::Union{Symbol, ContinuousTerm, CategoricalTerm}) = 1
 function degree(ex::Expr)
     check_call(ex)
     if ex.args[1] == :&

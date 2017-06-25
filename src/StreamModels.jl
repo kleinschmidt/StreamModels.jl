@@ -11,6 +11,7 @@ using StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 using CategoricalArrays: CategoricalPool
 
 export
+    Terms,
     Formula,
     @formula,
     parse!,
@@ -26,12 +27,14 @@ macro debug(msg)
 end
 
 include.(["typedefs.jl",
+          "terms.jl",
           "formula.jl",
-          "nulls_hack.jl",
-          "tupleiterators.jl",
-          "stream_utils.jl",
-          "set_schema.jl",
-          "anonfactory.jl",
-          "modelmatrix.jl"])
+          # "nulls_hack.jl",
+          # "tupleiterators.jl",
+          # "stream_utils.jl",
+          # "set_schema.jl",
+          # "anonfactory.jl",
+          # "modelmatrix.jl"
+          ])
 
 end # module
