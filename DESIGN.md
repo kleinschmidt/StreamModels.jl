@@ -37,19 +37,21 @@ particular function!
 
 So we have 
 
-* `ContinuousTerm`: just pull out value from tuple
-* `CategoricalTerm{N}`: pull out value from tuple and get vector from contrasts
+* `Terms.Continuous`: just pull out value from tuple
+* `Terms.Categorical{N}`: pull out value from tuple and get vector from contrasts
   matrix.
-* `InteractionTerm{Children}`: call `kron` on the child terms.
-* `FunctionTerm{F}`: call a function on values pulled out of the tuple.
-* `DeferredTerm`? For converting the formula to a vector of terms before data is
-  available. A place holder with just the name.
-* `InterceptTerm`
+* `Terms.Interaction{Children}`: call `kron` on the child terms.
+* `Terms.FunctionTerm{F}`: call a function on values pulled out of the tuple.
+* `Terms.Deferred{T}`: when you know the _type_ of term, but still need to
+  compute/extract invariants from the data that aren't known until run time.
+* `Terms.Eval`: Wrapper for symbols in formula that need to be evaluated with
+  respect to the named tuple, but where the type isn't known.
+* `Terms.Intercept`
 
 # `@formula`
 
 1. Parse and lower formula.
-2. Create terms (using `DeferredTerm` where leaf symbols are encountered and
+2. Create terms (using `Terms.Deferred` where leaf symbols are encountered and
    generating anonymous functions for function terms).
 
 # Combine with data
@@ -57,7 +59,10 @@ So we have
 1. Eval deferred terms based on data schema.  This might require updating the
    schema with, e.g., levels of categorical variables or min/max for splines.
    But we can get the _types_ of terms to be constructed before that.
-
+2. Given the term types, we then can update the schema (potentially doing a
+   sweep through the data).
+3. Then, given schema, we can instantiate the concrete terms: iterate over
+   terms, 
 
 
 1. Pull out types of data needed.

@@ -20,7 +20,11 @@ struct Categorical{N} <: Term
     contrasts::ContrastsMatrix
 end
 
-struct Deferred <: Term
+struct Eval <: Term
+    name::Symbol
+end
+
+struct Deferred{T} <: Term
     name::Symbol
 end
 
@@ -35,7 +39,7 @@ is_call(::Any, ::Any) = false
 
 
 ex_from_formula(i::Integer) = (@argcheck(i==1); :(Terms.Intercept()))
-ex_from_formula(s::Symbol) = Expr(:call, :(Terms.Deferred), Meta.quot(s))    
+ex_from_formula(s::Symbol) = Expr(:call, :(Terms.Eval), Meta.quot(s))
 function ex_from_formula(ex::Expr)
     @argcheck is_call(ex)
     if is_call(ex, :+)
@@ -64,15 +68,3 @@ end
 
 
 end # module Terms
-
-
-
-
-struct ss
-    f::Function
-end
-
-macro f(i)
-    :(ss( (x) -> x+$i ))
-end
-
