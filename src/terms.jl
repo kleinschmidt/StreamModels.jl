@@ -24,12 +24,8 @@ struct Eval <: Term
     name::Symbol
 end
 
-struct Deferred{T} <: Term
-    name::Symbol
-end
-
-struct FunctionTerm <: Term
-    f::Function
+struct FunctionTerm{F}  <: Term where F<:Function
+    f::F
 end
 
 is_call(ex::Expr) = Meta.isexpr(ex, :call)
@@ -66,5 +62,13 @@ function replace_symbols!(ex::Expr, tup::Symbol)
     ex
 end
 
+"""
+    extract_symbols(t::Term)
+
+Return all symbols that will be referred to in data in order to evaluate this term
+"""
+extract_symbols(::Any) = []
+extract_symbols(t::Terms.Eval) = t.name
+extract_symbols(t::Terms.Interaction) = mapreduce(extract_symbols, vcat, [], t.terms)
 
 end # module Terms

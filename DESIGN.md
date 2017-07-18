@@ -42,8 +42,6 @@ So we have
   matrix.
 * `Terms.Interaction{Children}`: call `kron` on the child terms.
 * `Terms.FunctionTerm{F}`: call a function on values pulled out of the tuple.
-* `Terms.Deferred{T}`: when you know the _type_ of term, but still need to
-  compute/extract invariants from the data that aren't known until run time.
 * `Terms.Eval`: Wrapper for symbols in formula that need to be evaluated with
   respect to the named tuple, but where the type isn't known.
 * `Terms.Intercept`
@@ -51,10 +49,21 @@ So we have
 # `@formula`
 
 1. Parse and lower formula.
-2. Create terms (using `Terms.Deferred` where leaf symbols are encountered and
+2. Create terms (using `Terms.Eval` where leaf symbols are encountered and
    generating anonymous functions for function terms).
 
 # Combine with data
+
+2. Perform a sweep through the data, computing invariants of the data that are
+   necessary but not part of teh schema (e.g., unique values for categorical
+   terms, min/max for splines)
+    * Sweep through terms, and based on the term and the schema (to get data
+      type) create summarizers for terms that need them and store in
+      `schema.metadata`.
+    * For each row, call `update!(schema, term, datarow)` to update stats.
+    * When finished with the data, sweep through all terms and convert
+      `Deferred` terms into concrete terms (`Categorical` etc.)
+
 
 1. Eval deferred terms based on data schema.  This might require updating the
    schema with, e.g., levels of categorical variables or min/max for splines.
