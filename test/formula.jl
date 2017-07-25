@@ -27,16 +27,16 @@
 
     end
 
-    @testset "@formula" begin
+    # @testset "@formula" begin
 
-        @test (@formula(y ~ x)) == Formula(:y, :x)
-        @test (@formula(y ~ 1)) == Formula(:y, 1)
-        @test (@formula(y ~ 1 + x)) == Formula(:y, :(1+x))
+    #     @test (@formula(y ~ x)) == Formula(:y, :x)
+    #     @test (@formula(y ~ 1)) == Formula(:y, 1)
+    #     @test (@formula(y ~ 1 + x)) == Formula(:y, :(1+x))
 
-        @test (@formula( ~ x)) == Formula(nothing, :x)
-        @test (@formula( ~ 1)) == Formula(nothing, 1)
-        @test (@formula( ~ 1 + x)) == Formula(nothing, :(1+x))
+    #     @test (@formula( ~ x)) == Formula(nothing, :x)
+    #     @test (@formula( ~ 1)) == Formula(nothing, 1)
+    #     @test (@formula( ~ 1 + x)) == Formula(nothing, :(1+x))
 
-    end
+    # end
 
 end
