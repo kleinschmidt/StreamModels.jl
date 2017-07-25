@@ -28,6 +28,8 @@ mutable struct CategoricalSummarizer{T}
     uniq::Vector{T}
 end
 
+CategoricalSummarizer{T}(name::Symbol) where T = CategoricalSummarizer(name, Set{T}(), T[])
+
 function update!(cs::CategoricalSummarizer{T}, nt) where T
     x = nt[cs.name]::T
     if x ∉ cs.seen

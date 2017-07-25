@@ -5,7 +5,8 @@ using
     DataStreams,
     CategoricalArrays,
     ArgCheck,
-    Compat
+    Compat,
+    Nulls
 
 using StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 using CategoricalArrays: CategoricalPool
@@ -30,5 +31,6 @@ include("typedefs.jl")
 include("terms.jl")
 include("formula.jl")
 include("summarize.jl")
+include("tupleiterators.jl")
 
 end # module
