@@ -1,4 +1,4 @@
-type Formula
+mutable struct Formula
     lhs::Union{Symbol, Expr, Void}
     rhs::Union{Symbol, Expr, Integer}
     rhs_lowered::Expr
@@ -17,7 +17,7 @@ macro formula(ex)
     else
         error("expected formula separator ~, got $(ex.head)")
     end
-    rhs_lowered = sort_terms!(parse!(copy(rhs)))
+    rhs_lowered = sort_terms!(parse!(Expr(:call, :+, copy(rhs))))
     terms_ex = Terms.ex_from_formula(rhs_lowered)
     return Expr(:call, :Formula, lhs, Meta.quot(rhs), Meta.quot(rhs_lowered), terms_ex)
 end
@@ -132,15 +132,8 @@ function parse!(ex::Expr)
 end
 
 parse!(x) = x
-# function parse!(f::Formula)
-#     f.rhs |> parse! |> sort_terms!
-#     f.lhs |> parse!
-#     f
-# end
-
-# parse(f::Formula) = parse!(copy(f))
-# Base.copy(x::Void) = x
-# Base.copy(x::Symbol) = x
+Base.copy(x::Void) = x
+Base.copy(x::Symbol) = x
 
 function sort_terms!(ex::Expr)
     check_call(ex)
