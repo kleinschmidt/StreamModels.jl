@@ -30,7 +30,7 @@ end
 include("typedefs.jl")
 include("terms.jl")
 include("formula.jl")
-include("summarize.jl")
+include("summarize/summarize.jl")
 include("tupleiterators.jl")
 
 end # module
