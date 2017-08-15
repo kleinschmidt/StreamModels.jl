@@ -24,9 +24,15 @@ struct Eval <: Term
     name::Symbol
 end
 
+# TODO: capture the original expression (and possibly the symbol for the original call)
 struct FunctionTerm{F}  <: Term where F<:Function
     f::F
+    name::Symbol
 end
+
+function Base.string(::Terms.Term) end
+Base.string(t::Terms.Eval) = string(t.name)
+
 
 is_call(ex::Expr) = Meta.isexpr(ex, :call)
 is_call(ex::Expr, op::Symbol) = Meta.isexpr(ex, :call) && ex.args[1] == op
@@ -48,7 +54,7 @@ function ex_from_formula(ex::Expr)
         # something like  log(1+a) and convert to (tup) -> log(1+tup[:a])
         tup_sym = gensym()
         anon_expr = Expr(:(->), tup_sym, replace_symbols!(copy(ex), tup_sym))
-        Expr(:call, :(Terms.FunctionTerm), anon_expr)
+        Expr(:call, :(Terms.FunctionTerm), anon_expr, ex.args[1])
     end
 end
 
@@ -61,14 +67,5 @@ function replace_symbols!(ex::Expr, tup::Symbol)
     end
     ex
 end
-
-"""
-    extract_symbols(t::Term)
-
-Return all symbols that will be referred to in data in order to evaluate this term
-"""
-extract_symbols(::Any) = []
-extract_symbols(t::Terms.Eval) = t.name
-extract_symbols(t::Terms.Interaction) = mapreduce(extract_symbols, vcat, [], t.terms)
 
 end # module Terms

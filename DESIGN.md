@@ -54,15 +54,19 @@ So we have
 
 # Combine with data
 
-2. Perform a sweep through the data, computing invariants of the data that are
+1. Perform a sweep through the data, computing invariants of the data that are
    necessary but not part of teh schema (e.g., unique values for categorical
    terms, min/max for splines)
     * Sweep through terms, and based on the term and the schema (to get data
       type) create summarizers for terms that need them and store in
       `schema.metadata`.
     * For each row, call `update!(schema, term, datarow)` to update stats.
-    * When finished with the data, sweep through all terms and convert
-      `Deferred` terms into concrete terms (`Categorical` etc.)
+    * Extract the actual summary statistics from the summarizers and store on
+      the schema metadata.
+2. Instantiate terms based on the stored summaries (converting `Eval` terms to
+   `Continuous` or `Categorical`, etc.).  This requires considering the context
+   that a term occurs in, in order to get promotion of contrasts to full rank
+   right.
 
 
 1. Eval deferred terms based on data schema.  This might require updating the

@@ -32,5 +32,6 @@ include("terms.jl")
 include("formula.jl")
 include("summarize/summarize.jl")
 include("tupleiterators.jl")
+include("set_schema.jl")
 
 end # module

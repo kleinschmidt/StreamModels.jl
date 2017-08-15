@@ -54,27 +54,27 @@
 #    checking for redundancy as necessary
 # 5. hold onto terms-ified expression, schema, and source
 
-get_symbols(s::Symbol) = s
-get_symbols(t::Term) = t.name
-get_symbols(x) = []
-function get_symbols(ex::Expr)
-    check_call(ex)
-    unique(mapreduce(get_symbols, vcat, Symbol[], ex.args[2:end]))
-end
-get_symbols(f::Formula) = vcat(get_symbols.([f.lhs, f.rhs])...)
+# get_symbols(s::Symbol) = s
+# get_symbols(t::Term) = t.name
+# get_symbols(x) = []
+# function get_symbols(ex::Expr)
+#     check_call(ex)
+#     unique(mapreduce(get_symbols, vcat, Symbol[], ex.args[2:end]))
+# end
+# get_symbols(f::Formula) = vcat(get_symbols.([f.lhs, f.rhs])...)
 
-is_categorical(s, sch::Data.Schema) = is_categorical(string(s), sch)
-is_categorical(s::String, sch::Data.Schema) = is_categorical(Data.types(sch)[sch[s]])
-is_categorical{T<:Real}(::Type{T}) = false
-is_categorical{T<:Real}(::Type{Nullable{T}}) = false
-is_categorical(::Type) = true
+# is_categorical(s, sch::Data.Schema) = is_categorical(string(s), sch)
+# is_categorical(s::String, sch::Data.Schema) = is_categorical(Data.types(sch)[sch[s]])
+# is_categorical{T<:Real}(::Type{T}) = false
+# is_categorical{T<:Real}(::Type{Nullable{T}}) = false
+# is_categorical(::Type) = true
 
 
-Base.string{T}(io::IO, t::ContinuousTerm{T}) = "$(t.name)($T)"
-Base.string{T,C}(io::IO, t::CategoricalTerm{T,C}) = "$(t.name)($C{$T})"
+# Base.string{T}(io::IO, t::ContinuousTerm{T}) = "$(t.name)($T)"
+# Base.string{T,C}(io::IO, t::CategoricalTerm{T,C}) = "$(t.name)($C{$T})"
 
-Base.show{T}(io::IO, t::ContinuousTerm{T}) = print(io, "$(t.name)::$T")
-Base.show{T,C}(io::IO, t::CategoricalTerm{T,C}) = print(io, "$(t.name)::$C{$T}")
+# Base.show{T}(io::IO, t::ContinuousTerm{T}) = print(io, "$(t.name)::$T")
+# Base.show{T,C}(io::IO, t::CategoricalTerm{T,C}) = print(io, "$(t.name)::$C{$T}")
 
 
 # set schema for data, checking redundancy as we go in order to promote
@@ -83,24 +83,24 @@ Base.show{T,C}(io::IO, t::CategoricalTerm{T,C}) = print(io, "$(t.name)::$C{$T}")
 # strategy for checking redundancy is to keep track of terms that we've already
 # seen, and checking for whether the term aliased is present
 
-is_call(ex::Expr) = Meta.isexpr(ex, :call)
-is_call(ex::Expr, op::Symbol) = Meta.isexpr(ex, :call) && ex.args[1] == op
-is_call(::Any) = false
-is_call(::Any, ::Any) = false
+# is_call(ex::Expr) = Meta.isexpr(ex, :call)
+# is_call(ex::Expr, op::Symbol) = Meta.isexpr(ex, :call) && ex.args[1] == op
+# is_call(::Any) = false
+# is_call(::Any, ::Any) = false
 
-extract_singleton(s::Set) = length(s) == 1 ? first(s) : s
+# extract_singleton(s::Set) = length(s) == 1 ? first(s) : s
 
 # in the context of an interaction term, a term aliases the version of that
 # interaction where it's been removed.  in the context of a _non_-interaction
 # expr (call to an aribtrary function), nothing is aliased
-function alias(s, context::Expr)
-    if is_call(context, :&)
-        extract_singleton(Set(c for c in context.args[2:end] if c ≠ s))
-    end
-end
+# function alias(s, context::Expr)
+#     if is_call(context, :&)
+#         extract_singleton(Set(c for c in context.args[2:end] if c ≠ s))
+#     end
+# end
 
 # in the context of itself, a single term aliases the intercept
-alias(s, t::Symbol) = s == t ? 1 : nothing
+# alias(s, t::Symbol) = s == t ? 1 : nothing
 
 set_schema!(i::Integer, already::Set, sch::Data.Schema) = (push!(already, i); i)
 
@@ -157,4 +157,87 @@ function set_schema!(f::Formula, sch::Data.Schema)
     f.rhs = set_schema!(f.rhs, sch)
     f.lhs = set_schema!(f.lhs, sch)
     f
+end
+
+################################################################################
+# With Formula as a vector of Terms:
+#
+# entry point is to set_schema on Vector{Term}.  initialize set of terms seen
+# already as a Set{Term}.  then map set_schema! on each term.
+# 
+# for individual Term, default method is to do nothing (return the term), and
+# add it to the set of terms already seen.
+#
+# for dealing with categorical terms, need to keep track of what's been seen so
+# far, and the context in which the Term we're currently processing occurred (by
+# itself, or as part of an interaction, or otherwise).  All that matters for
+# determining whether an aliased term is present is the _set_ of variables
+# contained in previously encountered terms, so we also need a way of extracting
+# that.
+
+function set_schema!(f::Formula, sch::Data.Schema)
+    already = Set()
+    map!(t -> set_schema!(t, already, sch), f.terms, f.terms)
+    f
+end
+
+set_schema!(t::Terms.Intercept, already::Set, ::Data.Schema) = (push!(already, t); t)
+
+function set_schema!(t::Terms.Interaction, already::Set, sch::Data.Schema)
+    t.terms = map(s -> set_schema!(s, t, already, sch), t.terms)
+    push!(already, termsyms(t))
+    t
+end
+
+function set_schema!(t::Terms.Eval, context::T, already::Set, sch::Data.Schema) 
+    where T<:Terms.Term
+
+    @debug "$s in context of $context, already seen $already"
+    push!(already, termsyms(t))
+    if is_categorical(t, sch)
+        aliased = aliassyms(t, context)
+        @debug "  aliases: $aliased"
+        if aliased in already
+            # TODO: allow custom contrasts here
+            contr = DEFAULT_CONTRASTS()
+        else
+            # lower-order term that is aliased by full-rank contrasts for this
+            # term is NOT present, so use full-rank contrasts and add the
+            # aliased term to the set of terms we've seen
+            contr = FullDummyCoding()
+            push!(already, aliased)
+        end
+        CategoricalTerm(s, ContrastsMatrix(contr, _unique(s, sch)))
+    else
+        ContinuousTerm{_eltype(s, sch)}(s)
+    end
+
+    
+end
+
+"""
+    termsyms(t::Terms.Term)
+
+Extract the Set of symbols referenced in this term.
+
+This is needed in order to determine when a categorical term should have
+standard (reduced rank) or full rank contrasts, based on the context it occurs
+in and the other terms that have already been encountered.
+"""
+
+termsyms(t::Terms.Term) = Set()
+termsyms(t::Terms.Intercept) = Set([1])
+termsyms(t::Union{Terms.Eval, Terms.Categorical, Terms.Continuous}) = Set([t.name])
+termsyms(t::Terms.Interaction) = mapreduce(termsyms, union, t.terms)
+
+
+
+"""
+    aliassyms(t::T, context::S) where {T<:Terms.Term, S<:Terms.Term}
+
+Get the Set of symbols that this term potentially aliases in this context.
+"""
+aliassyms(::Terms.Eval, context::Terms.Eval) = Set([1])
+function aliassyms(t::Terms.Eval, context::Terms.Interaction)
+    mapreduce(termsyms, union, c for c in context.terms if t ≠ c)
 end
