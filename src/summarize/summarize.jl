@@ -13,3 +13,5 @@ include("categorical.jl")
 include("make.jl")
 include("run.jl")
 
+# TODO: use OnlineStatsBase.jl API: replace Summarizer with OnlineStat, which
+# needs to provide a fit!, merge, and _value method.
