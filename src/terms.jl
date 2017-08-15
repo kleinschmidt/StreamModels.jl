@@ -1,5 +1,7 @@
 module Terms
 
+import StreamModels.name
+
 using StatsModels: ContrastsMatrix
 using ArgCheck
 
@@ -30,9 +32,10 @@ struct FunctionTerm{F}  <: Term where F<:Function
     name::Symbol
 end
 
-function Base.string(::Terms.Term) end
-Base.string(t::Terms.Eval) = string(t.name)
+function name(t::Term) end
+name(t::Union{Eval, Continuous, Categorical}) = t.name
 
+Base.string(t::Terms.Term) = string(name(t))
 
 is_call(ex::Expr) = Meta.isexpr(ex, :call)
 is_call(ex::Expr, op::Symbol) = Meta.isexpr(ex, :call) && ex.args[1] == op
