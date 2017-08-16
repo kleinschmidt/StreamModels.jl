@@ -15,8 +15,6 @@ export
     Terms,
     Formula,
     @formula,
-    parse!,
-    reset!,
     modelmatrix
 
 

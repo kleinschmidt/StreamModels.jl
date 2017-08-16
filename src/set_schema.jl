@@ -1,3 +1,7 @@
+# TODO: think of a better name for this? and consider using a special container
+# type (akin to ModelFrame), since we'd probably like to hold onto the schema,
+# too.
+
 
 ################################################################################
 # With Formula as a vector of Terms:
@@ -16,12 +20,17 @@
 # that.
 
 function set_schema!(f::Formula, sch::Data.Schema)
+    @argcheck !f.schema_set "Schema already set for this formula!"
     already = Set()
     f.terms = map(t -> set_schema(t, already, sch), f.terms)
+    f.schema_set = true
     f
 end
 
 set_schema(t::Terms.Intercept, already::Set, ::Data.Schema) = (push!(already, termsyms(t)); t)
+
+set_schema(t::Terms.FunctionTerm, already::Set, ::Data.Schema) =
+    (push!(already, termsyms(t)); t)
 
 function set_schema(t::Terms.Interaction, already::Set, sch::Data.Schema)
     new_t = Terms.Interaction(map(s -> set_schema(s, t, already, sch), t.terms))
@@ -71,7 +80,7 @@ termsyms(t::Terms.Term) = Set()
 termsyms(t::Terms.Intercept) = Set([1])
 termsyms(t::Union{Terms.Eval, Terms.Categorical, Terms.Continuous}) = Set([t.name])
 termsyms(t::Terms.Interaction) = mapreduce(termsyms, union, t.terms)
-
+termsyms(t::Terms.FunctionTerm) = Set([t.name])
 
 
 """

@@ -3,6 +3,7 @@ mutable struct Formula
     rhs::Union{Symbol, Expr, Integer}
     rhs_lowered::Expr
     terms::Vector{Terms.Term}
+    schema_set::Bool
 end
 
 
@@ -19,7 +20,7 @@ macro formula(ex)
     end
     rhs_lowered = sort_terms!(parse!(Expr(:call, :+, copy(rhs))))
     terms_ex = Terms.ex_from_formula(rhs_lowered)
-    return Expr(:call, :Formula, lhs, Meta.quot(rhs), Meta.quot(rhs_lowered), terms_ex)
+    return Expr(:call, :Formula, lhs, Meta.quot(rhs), Meta.quot(rhs_lowered), terms_ex, false)
 end
 
 Base.show(io::IO, f::Formula) = join(io,
