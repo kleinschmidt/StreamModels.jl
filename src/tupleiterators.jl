@@ -7,6 +7,8 @@ Base.start(ri::RowIterator) = 1
 Base.done(ri::RowIterator, i::Int) = i > length(getfield(ri.nt, 1))
 Base.length(ri::RowIterator) = length(ri.nt[1])
 
+Data.schema(ri::RowIterator) = Data.schema(ri.nt)
+
 @generated function Base.next(ri::RowIterator{names,T}, row::Int) where {names, T}
     NT = NamedTuple{names}
     S = Tuple{map(eltype, T.parameters)...}
