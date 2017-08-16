@@ -1,6 +1,6 @@
 @testset "Formulas" begin 
 
-    import StreamModels: sort_terms!
+    using StreamModels: sort_terms!, parse!
 
     @testset "Formula parsing" begin
 

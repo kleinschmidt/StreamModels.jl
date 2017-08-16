@@ -2,15 +2,14 @@
 
     using StreamModels
     using Base.Test
-    using DataFrames
     using StreamModels
     using DataStreams
 
     using StreamModels: @formula
 
-    source = DataFrame(a = collect(1:10),
-                       b = rand(10),
-                       c = repeat(["a", "b"], inner=5))
+    source = Data.Table((a = collect(1:10),
+                         b = rand(10),
+                         c = repeat(["a", "b"], inner=5)))
 
     @testset "single term RHS" begin
 

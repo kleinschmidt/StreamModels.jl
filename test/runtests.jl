@@ -3,7 +3,6 @@ using Base.Test
 
 @testset "StreamModels tests" begin
     include.(["formula.jl",
-              # "modelmatrix.jl",
-              # "csv.jl",
+              "modelmatrix.jl",
               "summarizers.jl"])
 end
