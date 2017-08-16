@@ -34,5 +34,6 @@ include("formula.jl")
 include("summarize/summarize.jl")
 include("tupleiterators.jl")
 include("set_schema.jl")
+include("modelmatrix.jl")
 
 end # module
