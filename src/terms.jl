@@ -20,6 +20,7 @@ end
 struct Categorical{N} <: Term
     name::Symbol
     contrasts::ContrastsMatrix
+    invindex::Dict
 end
 
 struct Eval <: Term

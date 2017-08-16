@@ -49,8 +49,9 @@ function set_schema(t::Terms.Eval, context::T, already::Set, sch::Data.Schema) w
         end
         uniq = sch.metadata[:summaries][name(t)][:unique]
         mat = ContrastsMatrix(contr, uniq)
+        invindex = Dict(lev => i for (i,lev) in enumerate(mat.levels))
         N = size(mat, 2)
-        Terms.Categorical{N}(name(t), mat)
+        Terms.Categorical{N}(name(t), mat, invindex)
     else
         Terms.Continuous(name(t))
     end
