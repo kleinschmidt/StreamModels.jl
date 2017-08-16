@@ -28,9 +28,10 @@ struct Eval <: Term
 end
 
 # TODO: capture the original expression (and possibly the symbol for the original call)
-struct FunctionTerm{F}  <: Term where F<:Function
+struct FunctionTerm{F,Forig}  <: Term where {F <: Function, Forig <: Function}
     f::F
-    name::Symbol
+    forig::Forig
+    name::Expr
 end
 
 function name(t::Term) end
@@ -58,7 +59,8 @@ function ex_from_formula(ex::Expr)
         # something like  log(1+a) and convert to (tup) -> log(1+tup[:a])
         tup_sym = gensym()
         anon_expr = Expr(:(->), tup_sym, replace_symbols!(copy(ex), tup_sym))
-        Expr(:call, :(Terms.FunctionTerm), anon_expr, ex.args[1])
+        f_orig = ex.args[1]
+        Expr(:call, :(Terms.FunctionTerm), anon_expr, f_orig, Meta.quot(ex))
     end
 end
 
