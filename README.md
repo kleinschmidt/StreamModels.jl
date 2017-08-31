@@ -1,12 +1,10 @@
-**NOTE: This currently relies on the NamedTuples PR to Base
-[JuliaLang/julia#22194](https://github.com/JuliaLang/julia/pull/22194)**  It
-could in principle be made to work with
-[NamedTuples.jl](https://github.com/blackrock/NamedTuples.jl) but I'm lazy.
 
 # StreamModels
 
 [![Build Status](https://travis-ci.org/kleinschmidt/StreamModels.jl.svg?branch=master)](https://travis-ci.org/kleinschmidt/StreamModels.jl)
 [![codecov.io](http://codecov.io/github/kleinschmidt/StreamModels.jl/coverage.svg?branch=master)](http://codecov.io/github/kleinschmidt/StreamModels.jl?branch=master)
+
+## The idea
 
 This is a prototype of a different approach to generating numerical model
 matrices based on tabular data and a formula.  It works with any data source
@@ -14,9 +12,18 @@ that produces a `Data.Schema` and an row iterator of `NamedTuple`s.  In
 principle, that's anything that satisfies the [DataStreams `Data.Source`
 interface](http://juliadata.github.io/DataStreams.jl/stable/), including
 in-memory stores like DataFrames/DataTables, as well as databases and files on
-disk like CSV and Feather.  But at the moment it's restricted to an in-memory
-store (a `Data.Table`, which is just a `NamedTuple` of `AbstractVector`
-columns).
+disk like CSV and Feather.  
+
+## Current status
+
+At the moment this is a proof of concept/sandbox for prototyping ideas.
+
+* Restricted to an in-memory store (a `Data.Table`, which is just a `NamedTuple`
+  of `AbstractVector` columns).
+* **It relies on the NamedTuples PR to Base
+  [JuliaLang/julia#22194](https://github.com/JuliaLang/julia/pull/22194)**.  It
+  could in principle be made to work with
+  [NamedTuples.jl](https://github.com/blackrock/NamedTuples.jl) but I'm lazy.
 
 ## Strategy
 
