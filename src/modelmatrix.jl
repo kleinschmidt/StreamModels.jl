@@ -24,24 +24,24 @@ nc(::Type{Terms.Interaction{T}}) where T = mapreduce(nc, *, T.parameters)
 nc(::Type{Terms.FunctionTerm{F1,F2}}) where {F1,F2} = 1 
 
 """
-    rowval(data::NamedTuple, term::T) where T <: Terms.Term
+    (term::<:Terms.Term)(data::NamedTuple)
 
-Generate a term's model matrix row values from one data row.
+Calling a term with a named tuple should realize the data corresponding to that
+named tuple as a numeric vector
+
 """
-# need to generate expressions like :(row[1] = data[terms[1].name])
-rowval(data::NamedTuple, ::Terms.Intercept) = 1
-rowval(data::NamedTuple, t::Terms.Continuous) = data[t.name]
-rowval(data::NamedTuple, t::Terms.Categorical) =
+(::Terms.Intercept)(data::NamedTuple) = 1
+(t::Terms.Continuous)(data::NamedTuple) = data[t.name]
+(t::Terms.Categorical)(data::NamedTuple) =
     t.contrasts.matrix[t.invindex[data[t.name]], :]
-@generated function rowval(data::NamedTuple, t::Terms.Interaction)
+(t::Terms.FunctionTerm)(data::NamedTuple) = t.f(data)
+# TODO: does this really need to be @generated??
+@generated function (t::Terms.Interaction)(data::NamedTuple)
     nterms = length(t.parameters[1].parameters)
-    out_ex = Expr(:call, :kron)
-    for ti in 1:nterms
-        push!(out_ex.args, :(rowval(data, t.terms[$ti])))
-    end
-    out_ex
+    Expr(:call, :kron, [:(t.terms[$ti](data)) for ti in 1:nterms]...)
 end
-rowval(data::NamedTuple, t::Terms.FunctionTerm) = t.f(data)
+
+# TODO: add methods for named tuple of vectors (e.g. Data.Table)
 
 
 ################################################################################
@@ -92,7 +92,7 @@ Fill one model matrix row based on a data named tuple and terms.
     ci = 0
     for ti in eachindex(Ts)
         starti, ci = ci+1, ci+nc(Ts[ti])
-        push!(func_body.args, :(row[$starti:$ci] = rowval(data, terms[$ti])))
+        push!(func_body.args, :(row[$starti:$ci] = terms[$ti](data)))
     end
     push!(func_body.args, :(row))
     @debug func_body
