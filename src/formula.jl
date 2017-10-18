@@ -1,3 +1,8 @@
+# TODO: extensibility of parsing and Terms types.  Allow for ranef terms etc.
+# Use dispatch in `ex_from_formula
+
+# TODO: turn Formula into a Term type and allow nested formulae.  I think all
+# this requires is adding a Terms.FormulaTerm.
 mutable struct Formula
     lhs::Union{Symbol, Expr, Void}
     rhs::Union{Symbol, Expr, Integer}
@@ -107,6 +112,7 @@ parse!(s::Symbol) = s
 parse!(i::Integer) = i ∈ [-1, 0, 1] ? i :
     throw(ArgumentError("invalid integer term $i (only -1, 0, and 1 allowed)"))
 
+## TODO: re-write this in terms of generic re-write rules to make more extensible
 function parse!(ex::Expr)
     @debug "parsing $ex"
     check_call(ex)
