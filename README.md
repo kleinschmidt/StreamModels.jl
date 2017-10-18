@@ -65,3 +65,57 @@ three-stage approach:
    terms and a `NamedTuple` of data for one row.  The loop over terms can be
    unrolled since each term type is annotated with the number of columns that it
    will generate.
+
+## Planned API
+
+My long-term hope is that this is a second-generation version of StatsModels
+with a more general and extensible API, including both streaming data, generic
+tabular data, and "multipart formulas" (as discussed
+[here](https://github.com/JuliaStats/StatsModels.jl/issues/21)).  The high-level
+entry point will be the `@model` macro, which captures formulas in a model
+constructor arguments and creates a `ModelBuilder` struct which is parametrized
+by the type of model constructed:
+
+```julia
+julia> @model df GLM(y ~ 1 + x*condition, family=Binomial)
+
+ModelBuilder{GLM}:
+    data:
+        df
+    args:
+        Formula(y~1+x+condition+x&conditino),
+    kw args:
+        family=Binomial
+```
+
+This type will have a default in this package that immediately applies the data
+to the formulae and calls the model constructor with the resulting numerical
+matrices/vectors replacing the corresponding formulae.  The result will be
+stored in a `ModelFrame{M}` struct, parametrized by the model type.
+
+Packages that want to do non-traditional things with the formulae (like using
+nested formulae to denote the relationship between endogenous and instrumental
+variables in
+[FixedEffectsModels.jl](https://github.com/matthieugomez/FixedEffectModels.jl))
+can add `ModelBuilder{M}` constructor methods for their own model types,
+allowing them to manipulate the extracted formulae as necessary.
+
+## Extending
+
+This package is designed to make the formula DSL extendable if you need to add
+special syntax or terms.  Essentially any julia operator or function can be
+given special meaning.  The points to extend are:
+
+* A subtype of `Terms.Term` to represent your special terms.
+* Method(s) for evaluating your term given a row of data:
+  `(t::MyTerm)(data::NamedTuple)`.  This should return a numeric vector
+* A method of `Terms.ex_from_formula` to convert the abbreviated formula syntax
+  into a constructor for your term type.  `Terms.ex_from_formula(::Val{head},
+  ex::Expr)` where `head` is the symbol that is the head of a call `ex`.  For
+  instance, if you wanted to add support for random effects of the form 
+  `(1+x | subject)`, you'd need to add a method `ex_from_formula(::Val{:|}, ex::Expr)`
+  that would return something like `:(ReTerm($(ex.args[2]), $(ex.args[3])))` (in
+  actual fact you'd probably need to parse the sub-expressions as well,
+  constructing the necessary terms for them)
+* A method `nc(::Type{MyTerm})` to determine the number of columns that your
+  term will generate **based only on the type**.

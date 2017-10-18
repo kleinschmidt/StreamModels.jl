@@ -41,7 +41,8 @@ named tuple as a numeric vector
     Expr(:call, :kron, [:(t.terms[$ti](data)) for ti in 1:nterms]...)
 end
 
-# TODO: add methods for named tuple of vectors (e.g. Data.Table)
+# TODO: add methods for named tuple of vectors (e.g. Data.Table): I think it's
+# just the interaction and function terms that need special cases for this.
 
 
 ################################################################################
