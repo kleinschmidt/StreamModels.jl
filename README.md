@@ -113,9 +113,9 @@ given special meaning.  The points to extend are:
   into a constructor for your term type.  `Terms.ex_from_formula(::Val{head},
   ex::Expr)` where `head` is the symbol that is the head of a call `ex`.  For
   instance, if you wanted to add support for random effects of the form 
-  `(1+x | subject)`, you'd need to add a method `ex_from_formula(::Val{:|}, ex::Expr)`
-  that would return something like `:(ReTerm($(ex.args[2]), $(ex.args[3])))` (in
-  actual fact you'd probably need to parse the sub-expressions as well,
-  constructing the necessary terms for them)
+  `(1+x | subject)`, you'd need to add a method like `ex_from_formula(::Val{:|},
+  ex::Expr) = :(ReTerm($(ex.args[2]), $(ex.args[3])))` (in actual fact you'd
+  probably need to parse the sub-expressions as well, constructing the necessary
+  terms for them)
 * A method `nc(::Type{MyTerm})` to determine the number of columns that your
   term will generate **based only on the type**.
