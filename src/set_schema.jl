@@ -22,10 +22,17 @@
 function set_schema!(f::Formula, sch::Data.Schema)
     @argcheck !f.schema_set "Schema already set for this formula!"
     already = Set()
-    f.terms = map(t -> set_schema(t, already, sch), f.terms)
+    f.term = set_schema(f.term, Set(), sch)
     f.schema_set = true
     f
 end
+
+set_schema(terms::AbstractVector{<:Terms.Term}, already::Set, sch::Data.Schema) =
+    map(t->set_schema(t, already, sch), terms)
+
+set_schema(t::Terms.FormulaTerm, already::Set, sch::Data.Schema) =
+    Terms.FormulaTerm(set_schema(t.lhs, Set(), sch),
+                      set_schema(t.rhs, already, sch))
 
 set_schema(t::Terms.Intercept, already::Set, ::Data.Schema) = (push!(already, termsyms(t)); t)
 
