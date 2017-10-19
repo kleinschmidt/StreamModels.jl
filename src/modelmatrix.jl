@@ -93,7 +93,7 @@ Fill one model matrix row based on a data named tuple and terms.
     ci = 0
     for ti in eachindex(Ts)
         starti, ci = ci+1, ci+nc(Ts[ti])
-        push!(func_body.args, :(row[$starti:$ci] = terms[$ti](data)))
+        push!(func_body.args, :(@inbounds row[$starti:$ci] = terms[$ti](data)))
     end
     push!(func_body.args, :(row))
     @debug func_body
