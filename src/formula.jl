@@ -1,8 +1,6 @@
 # TODO: extensibility of parsing and Terms types.  Allow for ranef terms etc.
 # Use dispatch in `term_ex_from_formula_ex`
 
-# TODO: turn Formula into a Term type and allow nested formulae.  I think all
-# this requires is adding a Terms.FormulaTerm.
 mutable struct Formula
     ex::Expr
     ex_lowered::Expr
