@@ -2,7 +2,6 @@
 
     using StreamModels
     using Base.Test
-    using StreamModels
     using DataStreams
 
     using StreamModels: @formula
