@@ -34,13 +34,18 @@ struct FunctionTerm{F,Forig}  <: Term where {F <: Function, Forig <: Function}
     name::Expr
 end
 
+struct FormulaTerm{L,R}
+    lhs::L
+    rhs::R
+end
+
 function name(t::Term) end
 name(t::Union{Eval, Continuous, Categorical}) = t.name
 
 Base.string(t::Terms.Term) = string(name(t))
 
 """
-    ex_from_formula(x)
+    term_ex_from_formula_ex(x)
 
 As part of the `@formula` macro, take a part of the formula and generate an
 expression to construct the appropriate `Term` type.
@@ -48,7 +53,7 @@ expression to construct the appropriate `Term` type.
 # Extending the formula language
 
 When `x` is an `Expr(:call, head, args...)`, this function calls the method
-`ex_from_formula(Val(head), x)`.  This allows for the formula DSL to be extended
+`term_ex_from_formula_ex(Val(head), x)`.  This allows for the formula DSL to be extended
 by adding methods for your own operators or functions.  They should return an
 `Expr` that constructs a `Term` based on the arguments of the `Expr`.
 
@@ -59,25 +64,28 @@ For call `Expr`s that don't have specialized methods for `Val{head}`, a
 single named tuple argument and calls the original function, replacing symbols
 in the original `Expr` with fields of the named tuple.
 """
-ex_from_formula(i::Integer) = (@argcheck(i==1); :(Terms.Intercept()))
-ex_from_formula(s::Symbol) = Expr(:call, :(Terms.Eval), Meta.quot(s))
+term_ex_from_formula_ex(i::Integer) = (@argcheck(i==1); :(Terms.Intercept()))
+term_ex_from_formula_ex(s::Symbol) = Expr(:call, :(Terms.Eval), Meta.quot(s))
 
 # calls dispatch on Val{head} for extensibility:
-function ex_from_formula(ex::Expr)
-    @argcheck is_call(ex)
-    ex_from_formula(Val(ex.args[1]), ex)
+function term_ex_from_formula_ex(ex::Expr)
+    #@argcheck is_call(ex)
+    term_ex_from_formula_ex(Val(ex.args[1]), ex)
 end
 
-
-ex_from_formula(::Val{:+}, ex::Expr) =
-    Expr(:vect, [ex_from_formula(x) for x in ex.args[2:end]]...)
-ex_from_formula(::Val{:&}, ex::Expr) =
+term_ex_from_formula_ex(::Val{:~}, ex::Expr) =
+    Expr(:call, :(Terms.FormulaTerm),
+         term_ex_from_formula_ex(ex.args[2]),
+         term_ex_from_formula_ex(ex.args[3]))
+term_ex_from_formula_ex(::Val{:+}, ex::Expr) =
+    Expr(:vect, [term_ex_from_formula_ex(x) for x in ex.args[2:end]]...)
+term_ex_from_formula_ex(::Val{:&}, ex::Expr) =
     Expr(:call, :(Terms.Interaction),
-         Expr(:tuple, [ex_from_formula(x) for x in ex.args[2:end]]...))
+         Expr(:tuple, [term_ex_from_formula_ex(x) for x in ex.args[2:end]]...))
 
 # generic: capture calls as anonymous functions of named tuple.  so take
 # something like log(1+a) and convert to (tup) -> log(1+tup[:a])
-function ex_from_formula(::Val{<:Any}, ex::Expr)
+function term_ex_from_formula_ex(::Val{<:Any}, ex::Expr)
     tup_sym = gensym()
     anon_expr = Expr(:(->), tup_sym, replace_symbols!(copy(ex), tup_sym))
     f_orig = ex.args[1]

@@ -1,13 +1,12 @@
 # TODO: extensibility of parsing and Terms types.  Allow for ranef terms etc.
-# Use dispatch in `ex_from_formula
+# Use dispatch in `term_ex_from_formula_ex`
 
 # TODO: turn Formula into a Term type and allow nested formulae.  I think all
 # this requires is adding a Terms.FormulaTerm.
 mutable struct Formula
-    lhs::Union{Symbol, Expr, Void}
-    rhs::Union{Symbol, Expr, Integer}
-    rhs_lowered::Expr
-    terms::Vector{Terms.Term}
+    ex::Expr
+    ex_lowered::Expr
+    term::Terms.FormulaTerm
     schema_set::Bool
 end
 
@@ -16,21 +15,20 @@ Base.copy(f::Formula) = Formula(copy(f.lhs), copy(f.rhs))
 
 macro formula(ex)
     raise_tilde!(ex)
-    if (ex.head === :macrocall && ex.args[1] === Symbol("@~")) || (ex.head === :call && ex.args[1] === :(~))
-        2 <= length(ex.args) <= 3 || error("malformed formula: $ex")
-        lhs = length(ex.args) == 3 ? Base.Meta.quot(ex.args[2]) : nothing
-        rhs = ex.args[end]
-    else
-        error("expected formula separator ~, got $(ex.head)")
+    @argcheck is_call(ex, :~) "expected formula separator ~, got $(ex.head)"
+    @argcheck 2 <= length(ex.args) <= 3 "malformed formula: $ex"
+
+    ex_lowered = copy(ex)
+    if length(ex.args) == 2
+        ex.args = [ex.args[1], nothing, ex.args[2]]
     end
-    rhs_lowered = sort_terms!(parse!(Expr(:call, :+, copy(rhs))))
-    terms_ex = Terms.ex_from_formula(rhs_lowered)
-    return Expr(:call, :Formula, lhs, Meta.quot(rhs), Meta.quot(rhs_lowered), terms_ex, false)
+    ex_lowered.args[3] = sort_terms!(parse!(Expr(:call, :+, ex_lowered.args[3])))
+
+    term_ex = Terms.term_ex_from_formula_ex(ex_lowered)
+    return Expr(:call, :Formula, Meta.quot(ex), Meta.quot(ex_lowered), term_ex, false)
 end
 
-Base.show(io::IO, f::Formula) = join(io,
-                                     [f.lhs === nothing ? "" : f.lhs, f.rhs],
-                                     " ~ ")
+Base.show(io::IO, f::Formula) = print(io, "formula: $(f.ex_lowered)")
 
 """
     raise_tilde!(ex::Expr)
