@@ -39,11 +39,6 @@ name(t::Union{Eval, Continuous, Categorical}) = t.name
 
 Base.string(t::Terms.Term) = string(name(t))
 
-is_call(ex::Expr) = Meta.isexpr(ex, :call)
-is_call(ex::Expr, op::Symbol) = Meta.isexpr(ex, :call) && ex.args[1] == op
-is_call(::Any) = false
-is_call(::Any, ::Any) = false
-
 """
     ex_from_formula(x)
 

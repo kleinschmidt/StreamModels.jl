@@ -20,13 +20,14 @@ export
 
 function name end
 
-const DEBUG = false
+const DEBUG = true
 
 macro debug(msg)
     DEBUG ? :(println(string($(esc(msg))))) : nothing
 end
 
 include("typedefs.jl")
+include("utils.jl")
 include("terms.jl")
 include("formula.jl")
 include("summarize/summarize.jl")
