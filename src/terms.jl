@@ -1,5 +1,7 @@
 module Terms
 
+using ..is_call
+
 import StreamModels.name
 
 using StatsModels: ContrastsMatrix
@@ -69,7 +71,7 @@ term_ex_from_formula_ex(s::Symbol) = Expr(:call, :(Terms.Eval), Meta.quot(s))
 
 # calls dispatch on Val{head} for extensibility:
 function term_ex_from_formula_ex(ex::Expr)
-    #@argcheck is_call(ex)
+    @argcheck is_call(ex)
     term_ex_from_formula_ex(Val(ex.args[1]), ex)
 end
 
