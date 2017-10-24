@@ -11,7 +11,10 @@ end
 
 Base.copy(f::Formula) = Formula(copy(f.lhs), copy(f.rhs))
 
-macro formula(ex)
+is_formula(x) = false
+is_formula(ex::Expr) = is_call(ex, :~) || is_call(ex) && is_call(ex.args[2], :~)
+
+function _formula!(ex::Expr)
     raise_tilde!(ex)
     @argcheck is_call(ex, :~) "expected formula separator ~, got $(ex.head)"
     @argcheck 2 <= length(ex.args) <= 3 "malformed formula: $ex"
@@ -24,6 +27,10 @@ macro formula(ex)
 
     term_ex = Terms.term_ex_from_formula_ex(ex_lowered)
     return Expr(:call, :Formula, Meta.quot(ex), Meta.quot(ex_lowered), term_ex, false)
+end
+
+macro formula(ex)
+    _formula!(ex)
 end
 
 Base.show(io::IO, f::Formula) = print(io, "formula: $(f.ex_lowered)")
@@ -40,7 +47,7 @@ converted to :(~(1+a)).
 
 """
 function raise_tilde!(ex::Expr)
-    if Meta.isexpr(ex, :call) && Meta.isexpr(ex.args[2], :call) && ex.args[2].args[1] === :~
+    if is_call(ex) && is_call(ex.args[2], :~)
         length(ex.args[2].args) == 2 || throw(ArgumentError("malformed formula: $ex"))
         ex.args[2] = ex.args[2].args[2]
         ex.args = [:~, deepcopy(ex)]

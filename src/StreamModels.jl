@@ -15,7 +15,8 @@ export
     Terms,
     Formula,
     @formula,
-    modelmatrix
+    modelmatrix,
+    @model
 
 
 function name end
@@ -34,5 +35,6 @@ include("summarize/summarize.jl")
 include("tupleiterators.jl")
 include("set_schema.jl")
 include("modelmatrix.jl")
+include("model.jl")
 
 end # module
