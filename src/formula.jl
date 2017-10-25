@@ -19,21 +19,26 @@ function _formula!(ex::Expr)
     @argcheck is_call(ex, :~) "expected formula separator ~, got $(ex.head)"
     @argcheck 2 <= length(ex.args) <= 3 "malformed formula: $ex"
 
-    ex_lowered = copy(ex)
+    ex_orig = copy(ex)
     if length(ex.args) == 2
         ex.args = [ex.args[1], nothing, ex.args[2]]
     end
-    ex_lowered.args[3] = sort_terms!(parse!(Expr(:call, :+, ex_lowered.args[3])))
+    ex.args[3] = sort_terms!(parse!(Expr(:call, :+, ex.args[3])))
 
-    term_ex = Terms.term_ex_from_formula_ex(ex_lowered)
-    return Expr(:call, :Formula, Meta.quot(ex), Meta.quot(ex_lowered), term_ex, false)
+    term_ex = Terms.term_ex_from_formula_ex(ex)
+    return Expr(:call, :Formula, Meta.quot(ex_orig), Meta.quot(ex), term_ex, false)
 end
 
 macro formula(ex)
     _formula!(ex)
 end
 
-Base.show(io::IO, f::Formula) = print(io, "formula: $(f.ex_lowered)")
+function Base.show(io::IO, f::Formula)
+    print(io, "formula: ")
+    lhs, rhs = f.ex_lowered.args[2:3]
+    lhs === nothing || print(io, "$lhs ")
+    print(io, "~ $rhs")
+end
 
 """
     raise_tilde!(ex::Expr)
