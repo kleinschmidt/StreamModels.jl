@@ -12,11 +12,14 @@ using StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 using CategoricalArrays: CategoricalPool
 
 export
+    ModelBuilder,
+    ModelFrame,
     Terms,
     Formula,
     @formula,
     modelmatrix,
-    @model
+    @model,
+    build
 
 
 function name end
