@@ -73,7 +73,7 @@ Predicted values for the model (needs to be fitted first; just delegates to the
 stored model
 
 """
-StatsBase.predict(mf::ModelFrame) = predict(mf.model)
+function StatsBase.predict(mf::ModelFrame) = predict(mf.model) end
 
 
 """
@@ -86,7 +86,7 @@ the non-formula arguments.
 Packages can customize this behavior by specializing on the model type.
 
 """
-StatsBase.predict(mf::ModelFrame{M,S}, source::S) where {M,S}
+function StatsBase.predict(mf::ModelFrame{M,S}, source::S) where {M,S} end
 
 # mutable struct ModelFrame{M,S}
 #     model::M
