@@ -12,12 +12,16 @@
 # a model constructor as formulae
 
 # ModelFrame has a constructed model + the formulae/data/schema used to
-# construct model.  I guess that's the model builder, plus the data source.
+# construct model.  I guess that's the model, the model builder, and the data
+# source.
 
-# ModelFrame provides the statsmodels API (fit!, predict, coef, etc.)
+# ModelFrame provides the statsmodels API (fit!, predict, coef, etc.).  predict
+# is implemented by passing all the formula-derived arguments and the fitted
+# model object to `predict`.
 
-# We go from ModelBuilder to ModelFrame by calling build!(::ModelBuilder,
-# source).
+# We go from ModelBuilder to ModelFrame by calling `build!(::ModelBuilder,
+# source)`, with a `!` to indicate that the model builder will be modified in
+# the process.
 #
 # what about when data is streaming?  we just need to get something that we can
 # call fit! etc. on.  Those methods will need to include data anyway so it's not
