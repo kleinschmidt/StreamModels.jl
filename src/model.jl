@@ -8,10 +8,15 @@ mutable struct ModelBuilder{M}
     args::Tuple
     kw::Dict{Symbol,Any}
     formula_idx::Vector{Int}
-    
+    formula_kws::Vector{Symbol}
 end
 
 ModelBuilder(head, args...; kw...) = ModelBuilder{head}(args, Dict(kw))
+function ModelBuilder{M}(args::Tuple, kw::Dict) where M
+    formula_idx = find(x -> x isa Formula, args)
+    formula_kws = Symbol[k for (k,v) in kw if isa(v, Formula)]
+    ModelBuilder{M}(args, kw, formula_idx, formula_kws)
+end
 
 _replace_formula!(x) = x
 function _replace_formula!(ex::Expr)
