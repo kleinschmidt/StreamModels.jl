@@ -53,7 +53,7 @@ end
 
 function modelmatrix(source, f::Formula)
     f.schema_set || set_schema!(f, summarize(source, f))
-    modelmatrix(source, tuple(f.terms...))
+    modelmatrix(source, tuple(f.term.rhs...))
 end
 
 function modelmatrix(source, terms::T) where T<:Tuple{Vararg{Terms.Term,N}} where N

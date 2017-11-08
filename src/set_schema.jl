@@ -30,6 +30,8 @@ end
 set_schema(terms::AbstractVector{<:Terms.Term}, already::Set, sch::Data.Schema) =
     map(t->set_schema(t, already, sch), terms)
 
+set_schema(::Void, ::Set, ::Data.Schema) = Void()
+
 set_schema(t::Terms.FormulaTerm, already::Set, sch::Data.Schema) =
     Terms.FormulaTerm(set_schema(t.lhs, Set(), sch),
                       set_schema(t.rhs, already, sch))

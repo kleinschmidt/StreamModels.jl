@@ -1,5 +1,5 @@
 @testset "Summarizers" begin
-    using Base.Test
+    using Test
 
     # requires Base NamedTuples and DataStreams/jq/gangy
 
@@ -33,11 +33,11 @@
         
     @testset "One summarizer per unique variable" begin
         f = @formula( ~ 1 + a + b + c + c)
-        summarizers = unique(reduce(vcat, [], make_summarizer(t, types) for t in f.terms))
+        summarizers = unique(reduce(vcat, [], make_summarizer(t, types) for t in f.term.rhs))
         @test length(summarizers) == 1
 
         f = @formula( ~ 1 + a*b*c)
-        summarizers = unique(reduce(vcat, [], make_summarizer(t, types) for t in f.terms))
+        summarizers = unique(reduce(vcat, [], make_summarizer(t, types) for t in f.term.rhs))
         @test length(summarizers) == 1
     end
 
