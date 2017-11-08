@@ -62,7 +62,17 @@ the constructor.
 
 """
 function build(builder::ModelBuilder{M}, source) where M
-    
+    sch = summarize(source,
+                    builder.args[builder.formula_idx]...,
+                    builder.kw[builder.formula_kw]...)
+    for idx in builder.formula_idx
+        set_schema!(builder.args[idx], sch)
+    end
+    for kw in builder.formula_kws
+        set_schema!(builder.kw[kw], sch)
+    end
+
+    ## call model matrix and plug into constructor
 end
 
 
