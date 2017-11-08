@@ -2,6 +2,7 @@ module StreamModels
 
 using
     StatsModels,
+    StatsBase,
     DataStreams,
     CategoricalArrays,
     ArgCheck,
