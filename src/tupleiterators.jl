@@ -10,9 +10,14 @@ Base.length(ri::RowIterator) = length(ri.nt[1])
 Data.schema(ri::RowIterator) = Data.schema(ri.nt)
 
 @generated function Base.next(ri::RowIterator{names,T}, row::Int) where {names, T}
-    NT = NamedTuple{names}
     S = Tuple{map(eltype, T.parameters)...}
-    r = :(Base.namedtuple($NT, convert($S, tuple($((:($(Symbol("v$i")) = getfield(ri.nt, $i)[row]; $(Symbol("v$i")) isa Null ? null : $(Symbol("v$i"))) for i = 1:nfields(T))...)))...))
+    NT = NamedTuple{names,S}
+    r = :($NT(tuple($( ( :( $(Symbol("v$i")) = getfield(ri.nt, $i)[row];
+                            $(Symbol("v$i")) isa Null ? null : $(Symbol("v$i"))
+                          ) for i = 1:nfields(T)
+                       )...
+                     )
+                   )))
     return :(($r, row+1))
 end
 
