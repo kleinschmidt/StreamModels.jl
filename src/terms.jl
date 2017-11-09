@@ -1,10 +1,10 @@
 module Terms
 
 using ..is_call
+using ..ContrastsMatrix
 
 import StreamModels.name
 
-using StatsModels: ContrastsMatrix
 using ArgCheck
 
 abstract type Term end

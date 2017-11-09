@@ -1,7 +1,6 @@
 module StreamModels
 
 using
-    StatsModels,
     StatsBase,
     DataStreams,
     CategoricalArrays,
@@ -9,18 +8,22 @@ using
     Compat,
     Nulls
 
-using StatsModels: ContrastsMatrix, DEFAULT_CONTRASTS, FullDummyCoding
 using CategoricalArrays: CategoricalPool
 
 export
     ModelBuilder,
-    ModelFrame,
     Terms,
     Formula,
     @formula,
     modelmatrix,
     @model,
-    build
+    build,
+
+    AbstractContrasts,
+    EffectsCoding,
+    DummyCoding,
+    HelmertCoding,
+    ContrastsCoding
 
 
 function name end
@@ -32,6 +35,7 @@ macro debug(msg)
 end
 
 include("typedefs.jl")
+include("contrasts.jl")
 include("utils.jl")
 include("terms.jl")
 include("formula.jl")
