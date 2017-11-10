@@ -56,7 +56,7 @@ function modelmatrix(source, f::Formula)
     modelmatrix(source, tuple(f.term.rhs...))
 end
 
-function modelmatrix(source, terms::T) where T<:Tuple{Vararg{Terms.Term,N}} where N
+function modelmatrix(source, terms::T) where T<:Tuple{Vararg{<:Terms.Term,N}} where N
     iter = RowIterator(source)
     
     nrows = length(iter)
