@@ -11,9 +11,6 @@ end
 
 Base.copy(f::Formula) = Formula(copy(f.lhs), copy(f.rhs))
 
-is_formula(x) = false
-is_formula(ex::Expr) = is_call(ex, :~) || is_call(ex) && is_call(ex.args[2], :~)
-
 function _formula!(ex::Expr)
     raise_tilde!(ex)
     @argcheck is_call(ex, :~) "expected formula separator ~, got $(ex.head)"
