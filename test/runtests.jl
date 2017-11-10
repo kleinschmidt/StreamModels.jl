@@ -1,5 +1,5 @@
 using StreamModels
-using Base.Test
+using Test
 
 @testset "StreamModels tests" begin
     include.(["formula.jl",

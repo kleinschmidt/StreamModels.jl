@@ -1,6 +1,6 @@
 # 
 using StreamModels
-using Base.Test
+using Test
 using DataStreams
 
 using StreamModels: @formula, set_schema!, modelmatrow!, RowIterator

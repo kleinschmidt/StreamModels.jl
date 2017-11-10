@@ -1,7 +1,7 @@
 @testset "Model matrix" begin
 
     using StreamModels
-    using Base.Test
+    using Test
     using DataStreams
 
     using StreamModels: @formula
@@ -39,7 +39,7 @@
     @testset "arbitrary functions" begin
 
         @test modelmatrix(source, @formula(~ log(a)))[:,1] == log.(float(source[:a]))
-        @test modelmatrix(source, @formula(~ log(1+a)))[:,1] == log.(1.+float(source[:a]))
+        @test modelmatrix(source, @formula(~ log(1+a)))[:,1] == log.(1 .+ float(source[:a]))
         @test modelmatrix(source, @formula(~ 1 + log(a))) == [ones(10) log.(float(source[:a]))]
         @test modelmatrix(source, @formula(~ log(a+b)))[:,1] == log.(source[:a].+source[:b])
         ## @test modelmatrix(source, @formula(~ log(a*b)))[:,1] == log.(source[:a].*source[:b])
