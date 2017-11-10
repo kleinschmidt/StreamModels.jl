@@ -14,7 +14,7 @@ Data.schema(ri::RowIterator) = Data.schema(ri.nt)
     NT = NamedTuple{names,S}
     r = :($NT(tuple($( ( :( $(Symbol("v$i")) = getfield(ri.nt, $i)[row];
                             $(Symbol("v$i")) isa Null ? null : $(Symbol("v$i"))
-                          ) for i = 1:nfields(T)
+                          ) for i = 1:fieldcount(T)
                        )...
                      )
                    )))
