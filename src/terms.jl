@@ -41,10 +41,60 @@ struct FormulaTerm{L,R}
     rhs::R
 end
 
+"""
+    haslhs(ft::FormulaTerm{L})
+
+Return true is the LHS type is not Void
+"""
+haslhs(ft::FormulaTerm{L}) where L = L!==Void
+
+
 function name(t::Term) end
 name(t::Union{Eval, Continuous, Categorical}) = t.name
 
 Base.string(t::Terms.Term) = string(name(t))
+
+"""
+    ismatrixterm(T::Type{<:Term})
+    ismatrixterm(t::T) where T<:Term
+
+Return true if this type should be included in a single model matrix (e.g., a
+random effect term should return false).
+"""
+ismatrixterm(::T) where T<:Term = false
+
+for T in [FunctionTerm, Categorical, Continuous, Intercept, Interaction]
+    @eval ismatrixterm(::S) where S<:$T = true
+end
+
+
+"""
+    flatten_formula(term::FormulaTerm)
+
+Extract a vector of "flattened" terms.  If present, the first element will be
+the LHS.  The next will be a vector of all the "matrix terms", and any other
+terms will be passed through unchanged
+
+"""
+function flatten_formula(term::FormulaTerm)
+    # create a tuple of terms where we:
+    # 1. pull out LHS is present
+    # 2. collect LHS matrix terms
+    # 3. pass the rest on alone
+    new_terms = []
+    matrix_terms = []
+    for t in term.rhs
+        if ismatrixterm(t)
+            push!(matrix_terms, t)
+        else
+            push!(new_terms, t)
+        end
+    end
+    !isempty(matrix_terms) && unshift!(new_terms, tuple(matrix_terms...))
+    haslhs(term) && unshift!(new_terms, term.lhs)
+    tuple(new_terms...)
+end
+
 
 """
     term_ex_from_formula_ex(x)
