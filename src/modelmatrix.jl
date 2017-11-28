@@ -72,8 +72,8 @@ init_matrix(source, term::T) where T<:Union{Terms.Term, TermTuple} =
     Array{Float64}(nrows(source), nc(T))
 
 
-function modelmatrix(source, terms::T...) where T<:Union{Terms.Term, TermTuple}
-    mats = [init_matrix(source, t) for t in terms]
+function modelmatrix(source, terms::T) where T<:Tuple{Vararg{<:Union{Terms.Term, TermTuple},N}} where N
+    mats = tuple(init_matrix(source, t) for t in terms...)
     mat_terms = zip(mats, terms)
 
     iter = RowIterator(source)
@@ -120,3 +120,6 @@ end
     cols = mapreduce(nc, +, Ts)
     :(modelmatrow!(Array{Float64}($cols), data, terms))
 end
+
+modelmatrow!(row::AbstractVector, data::NamedTuple, term::T) where T<:Terms.Term =
+    modelmatrow!(row, data, (term,))
