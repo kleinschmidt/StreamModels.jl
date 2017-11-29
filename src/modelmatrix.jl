@@ -66,7 +66,7 @@ function modelmatrix(source, term::Terms.FormulaTerm)
 end
 
 nrows(t::Data.Table) = length(t[1])
-nrows(t::RowIterator) = length(t)
+nrows(r::Data.Rows) = length(r)
 
 init_matrix(source, term::T) where T<:Union{Terms.Term, TermTuple} =
     Array{Float64}(nrows(source), nc(T))
@@ -76,7 +76,7 @@ function modelmatrix(source, terms::T) where T<:Tuple{Vararg{<:Union{Terms.Term,
     mats = tuple(init_matrix(source, t) for t in terms...)
     mat_terms = zip(mats, terms)
 
-    iter = RowIterator(source)
+    iter = Data.rows(source)
 
     for (i, data) in enumerate(iter)
         for (mat, term) in mat_terms

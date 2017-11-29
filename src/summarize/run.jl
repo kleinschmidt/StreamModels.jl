@@ -14,7 +14,7 @@ function summarize!(sch::Data.Schema, source::Data.Table, fs::Formula...)
     types = Dict(Symbol(k) => Data.types(sch)[sch[k]] for k in Data.header(sch))
     summarizers = unique(reduce(vcat, [], make_summarizer(t, types) for t in terms))
     isempty(summarizers) && return sch
-    for nt in RowIterator(source)
+    for nt in Data.rows(source)
         for s in summarizers
             update!(s, nt)
         end

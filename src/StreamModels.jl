@@ -6,7 +6,7 @@ using
     CategoricalArrays,
     ArgCheck,
     Compat,
-    Nulls
+    Missings
 
 using CategoricalArrays: CategoricalPool
 
@@ -40,7 +40,6 @@ include("utils.jl")
 include("terms.jl")
 include("formula.jl")
 include("summarize/summarize.jl")
-include("tupleiterators.jl")
 include("set_schema.jl")
 include("modelmatrix.jl")
 include("model.jl")

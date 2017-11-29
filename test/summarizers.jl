@@ -6,7 +6,7 @@
     using DataStreams
     using StreamModels
 
-    using StreamModels: RowIterator, update!, summarize, CategoricalSummarizer, make_summarizer
+    using StreamModels: update!, summarize, CategoricalSummarizer, make_summarizer
 
     source = Data.Table((a = collect(1:10),
                          b = rand(10),
@@ -15,7 +15,7 @@
     types = Dict(Symbol(k) => Data.types(sch)[sch[k]] for k in Data.header(sch))
 
     @testset "CategoricalSummarizer computes unique values" begin
-        iter = RowIterator(source)
+        iter = Data.rows(source)
 
         summ = StreamModels.make_summarizer(StreamModels.Terms.Eval(:c), types)
 
