@@ -5,8 +5,7 @@ using
     DataStreams,
     CategoricalArrays,
     ArgCheck,
-    Compat,
-    Missings
+    Compat
 
 using CategoricalArrays: CategoricalPool
 
