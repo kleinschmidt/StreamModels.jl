@@ -118,6 +118,13 @@ parse!(i::Integer) = i ∈ [-1, 0, 1] ? i :
     throw(ArgumentError("invalid integer term $i (only -1, 0, and 1 allowed)"))
 
 ## TODO: re-write this in terms of generic re-write rules to make more extensible
+## the rules have a form like
+## 1. check if rule applies, given ex and (idx of) child being parsed.
+## 2. re-write expression starting from idx of child.
+## 3. return idx of next child to check.
+##
+## might need to differentiate between pre-walk and post-walk rules?  or change
+## where the star expansion happens (should be able to check it...)
 function parse!(ex::Expr)
     @debug "parsing $ex"
     check_call(ex)
