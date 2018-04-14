@@ -1,3 +1,5 @@
+using Nullables
+
 # Specify contrasts for coding categorical data in model matrix. Contrasts types
 # are a subtype of AbstractContrasts. ContrastsMatrix types hold a contrast
 # matrix, levels, and term names and provide the interface for creating model

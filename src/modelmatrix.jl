@@ -33,7 +33,7 @@ Calling a term with a named tuple should realize the data corresponding to that
 named tuple as a numeric vector
 
 """
-(::Terms.Intercept)(data::NamedTuple) = 1
+(t::Terms.Intercept)(data::NamedTuple) = 1
 (t::Terms.Continuous)(data::NamedTuple) = data[t.name]
 (t::Terms.Categorical)(data::NamedTuple) =
     t.contrasts.matrix[t.invindex[data[t.name]], :]

@@ -76,27 +76,27 @@ function build(builder::ModelBuilder{M}, source) where M
 end
 
 
-"""
-    predict(mf::ModelFrame)
+# """
+#     predict(mf::ModelFrame)
 
-Predicted values for the model (needs to be fitted first; just delegates to the
-stored model
+# Predicted values for the model (needs to be fitted first; just delegates to the
+# stored model
 
-"""
-function StatsBase.predict(mf::ModelFrame) = predict(mf.model) end
+# """
+# StatsBase.predict(mf::ModelFrame) = predict(mf.model)
 
 
-"""
-    predict(mf::ModelFrame{M,S}, source::S) where {M,S}
+# """
+#     predict(mf::ModelFrame{M,S}, source::S) where {M,S}
 
-Generate predictions for new data.  The source is converted into numeric
-arguments and plugged in in the same order they occur in the builder, without
-the non-formula arguments.
+# Generate predictions for new data.  The source is converted into numeric
+# arguments and plugged in in the same order they occur in the builder, without
+# the non-formula arguments.
 
-Packages can customize this behavior by specializing on the model type.
+# Packages can customize this behavior by specializing on the model type.
 
-"""
-function StatsBase.predict(mf::ModelFrame{M,S}, source::S) where {M,S} end
+# """
+# function StatsBase.predict(mf::ModelFrame{M,S}, source::S) where {M,S} end
 
 # mutable struct ModelFrame{M,S}
 #     model::M

@@ -5,3 +5,4 @@ ArgCheck
 Compat 0.26
 StatsBase
 CategoricalArrays
+Nullables
