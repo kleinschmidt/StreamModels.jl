@@ -151,7 +151,7 @@ function parse!(ex::Expr)
 end
 
 parse!(x) = x
-Base.copy(x::Void) = x
+Base.copy(x::Nothing) = x
 Base.copy(x::Symbol) = x
 
 function sort_terms!(ex::Expr)

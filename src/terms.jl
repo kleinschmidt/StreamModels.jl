@@ -44,9 +44,9 @@ end
 """
     haslhs(ft::FormulaTerm{L})
 
-Return true is the LHS type is not Void
+Return true is the LHS type is not Nothing
 """
-haslhs(ft::FormulaTerm{L}) where L = L!==Void
+haslhs(ft::FormulaTerm{L}) where L = L!==Nothing
 
 
 function name(t::Term) end
@@ -116,7 +116,7 @@ For call `Expr`s that don't have specialized methods for `Val{head}`, a
 single named tuple argument and calls the original function, replacing symbols
 in the original `Expr` with fields of the named tuple.
 """
-term_ex_from_formula_ex(::Void) = nothing
+term_ex_from_formula_ex(::Nothing) = nothing
 term_ex_from_formula_ex(i::Integer) = (@argcheck(i==1); :(Terms.Intercept()))
 term_ex_from_formula_ex(s::Symbol) = Expr(:call, :(Terms.Eval), Meta.quot(s))
 
