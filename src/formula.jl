@@ -17,10 +17,8 @@ function _formula!(ex::Expr)
     @argcheck 2 <= length(ex.args) <= 3 "malformed formula: $ex"
 
     ex_orig = copy(ex)
-    if length(ex.args) == 2
-        ex.args = [ex.args[1], nothing, ex.args[2]]
-    end
-    ex.args[3] = sort_terms!(parse!(Expr(:call, :+, ex.args[3])))
+    length(ex.args) == 2 && insert!(ex.args, 2, nothing)
+    sort_terms!(parse!(ex))
 
     term_ex = Terms.term_ex_from_formula_ex(ex)
     return Expr(:call, :Formula, Meta.quot(ex_orig), Meta.quot(ex), term_ex, false)
@@ -65,6 +63,8 @@ Base.:(==)(f1::Formula, f2::Formula) = all(getfield(f1, f)==getfield(f2, f) for 
 check_call(ex) = Meta.isexpr(ex, :call) || throw(ArgumentError("non-call expression encountered: $ex"))
 
 # expression re-write rules:
+is_star(a::Expr, b) = false
+is_star(a::Expr, b::Expr) = is_call(b, :*)
 expand_star(a, b) = Expr(:call, :+, a, b, Expr(:call, :&, a, b))
 function expand_star!(ex::Expr)
     @debug "  expand star: $ex -> "
@@ -72,6 +72,11 @@ function expand_star!(ex::Expr)
     @debug "               $ex"
     ex
 end
+function expand_star!(ex::Expr, child_idx::Int)
+    expand_star!(ex.args[child_idx])
+    child_idx
+end
+
 
 const ASSOCIATIVE = Set([:+, :&, :*])
 associative(a, b) =
@@ -128,9 +133,6 @@ parse!(i::Integer) = i ∈ [-1, 0, 1] ? i :
 function parse!(ex::Expr)
     @debug "parsing $ex"
     check_call(ex)
-    if ex.args[1] == :*
-        expand_star!(ex)
-    end
     # iterate over children, checking for special rules
     child_idx = 2
     while child_idx <= length(ex.args)
@@ -139,6 +141,8 @@ function parse!(ex::Expr)
         parse!(ex.args[child_idx])
         if associative(ex, ex.args[child_idx])
             child_idx = associate!(ex, child_idx)
+        elseif is_star(ex, ex.args[child_idx])
+            child_idx = expand_star!(ex, child_idx)
         elseif distributive(ex, ex.args[child_idx])
             child_idx = distribute!(ex, child_idx)
         else
